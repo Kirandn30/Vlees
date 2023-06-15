@@ -11,6 +11,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { setUser } from './src/redux/UserSlice';
 import Pages from './src';
 import { Keyboard } from 'react-native'
+import { SafeAreaView } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
   return (
@@ -20,7 +22,11 @@ export default function App() {
           animated={true}
           backgroundColor="#000000"
         />
-        <Pages />
+        <SafeAreaProvider>
+          <SafeAreaView className="flex-1 bg-white ">
+            <Pages />
+          </SafeAreaView>
+        </SafeAreaProvider>
       </NativeBaseProvider>
     </Provider>
   );

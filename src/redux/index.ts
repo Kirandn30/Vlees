@@ -3,13 +3,15 @@ import UserSlice from './UserSlice'
 import LocationSlice from "./Mapslice"
 import ListingSlice from "./ProductsSlice"
 import CartSlice from './CartSlice'
+import orderSlice from './orderSlice'
 
 export const store = configureStore({
     reducer: {
         User: UserSlice,
         Location: LocationSlice,
         Listings: ListingSlice,
-        Cart: CartSlice
+        Cart: CartSlice,
+        Orders: orderSlice
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

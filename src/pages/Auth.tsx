@@ -1,11 +1,11 @@
-import { Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { Text, View, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native'
 import React, { useState, useRef } from 'react'
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha"
 import { Firebase, firebaseConfig } from '../../config'
-import { Input, Image, Icon, Checkbox, FormControl } from "native-base";
+import { Input, Image, Icon, Checkbox, FormControl, KeyboardAvoidingView } from "native-base";
 import { Feather, EvilIcons, AntDesign } from "@expo/vector-icons";
 import ButtonCompo from '../components/button';
-import CustomKeyboardAvoidingView from '../components/keyboardAvoid';
+import KeyboardAvoider from '../components/keyboardAvoid';
 
 const PhoneAuth = () => {
     const [phoneNumber, setPhoneNumber] = useState<null | string>(null)
@@ -59,6 +59,8 @@ const PhoneAuth = () => {
     return (
         <View>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                {/* <ScrollView className='flex-1 pb-1' > */}
+                <KeyboardAvoidingView>
                 <View className='mb-10'>
                     <View className='h-screen' >
                         <View>
@@ -70,19 +72,18 @@ const PhoneAuth = () => {
                                 />
                                 <View className='relative h-20'>
                                     <View className='h-20 absolute -top-1/4 m-auto w-full'>
-                                        {/* <Image
+                                            <Image
                                             className='w-3/4 h-20 m-auto rounded-lg'
-                                            source={require('../../assets/meatfouru.png')}
+                                                source={require('../../assets/meatforyou.jpeg')}
                                             alt='meat4u'
-                                        /> */}
+                                            />
                                     </View>
                                 </View>
                                 <View className='space-y-3 mt-10'>
                                     <Text className='text-center text-4xl font-semibold'>Welcome!</Text>
                                     <Text className='text-center text-2xl font-normal text-gray-400'>Sign-in with Phone number</Text>
                                 </View>
-                            </View>
-                            <CustomKeyboardAvoidingView>
+                                </View>
                                 <View className='w-4/5 m-auto mt-10 space-y-3 h-48'>
                                     <View>
                                         <FormControl isInvalid={notValid} >
@@ -151,10 +152,14 @@ const PhoneAuth = () => {
                                         />
                                     </View>
                                 </View>
-                            </CustomKeyboardAvoidingView>
                         </View>
                     </View>
-                </View>
+                    </View>
+
+                </KeyboardAvoidingView>
+                {/* <KeyboardAvoider yOffset={4} > */}
+                {/* </KeyboardAvoider> */}
+                {/* </ScrollView > */}
             </TouchableWithoutFeedback>
             <FirebaseRecaptchaVerifierModal
                 ref={recaptchaVerifier}

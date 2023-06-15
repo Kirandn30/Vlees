@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux'
 import { MaterialIcons } from '@expo/vector-icons';
-import { Divider, Icon, Image } from 'native-base';
+import { Button, Divider, Drawer, Icon, Image } from 'native-base';
 import { AntDesign } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
@@ -11,19 +11,23 @@ import { Entypo } from '@expo/vector-icons';
 import { addItems, removeItems } from '../../redux/CartSlice';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonCompo from '../../components/button';
-import { serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, query, serverTimestamp, where } from "firebase/firestore";
 import { Firebase } from '../../../config';
-import uuid from 'react-native-uuid';
+import { setAddresses, setLocation, setPlaceName } from '../../redux/Mapslice';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 
 const Cart = () => {
     const { items, total_items, total_price } = useSelector((state: RootState) => state.Cart)
     const { location, placeName, addresses } = useSelector((state: RootState) => state.Location)
     const { User, userDetails } = useSelector((state: RootState) => state.User)
+    const [isOpen, setIsOpen] = useState(false)
 
     const [savings, setSavings] = useState(0)
     const deviceHeight = Dimensions.get("window").height;
     const dispatch = useDispatch()
     const getOrderId = Firebase.functions().httpsCallable('getOrderId');
+    const navigate = useNavigation()
+
 
     useEffect(() => {
         const totalPrice = items.reduce((accumulator, currentItem) => {
@@ -33,6 +37,15 @@ const Cart = () => {
         }, 0);
         setSavings(totalPrice)
     }, [items])
+
+    useEffect(() => {
+        if (!User) return
+        const unsub = onSnapshot(query(collection(Firebase.firestore(), "Address"), where("userId", "==", User.uid)), (snap) => {
+            dispatch(setAddresses(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
+        })
+        return () => unsub()
+    }, [])
+
 
     const renderItem = ({ item }: {
         item: {
@@ -91,8 +104,7 @@ const Cart = () => {
 
 
     return (
-        <View className='bg-red-50 relative flex-1 justify-between'>
-            {/* <ScrollView> */}
+        <View className='bg-gray-50 relative flex-1 justify-between'>
             <View className='space-y-5'>
                 <View className='bg-[#d8f3dc] p-4'>
                     <Text className='text-2xl font-bold text-green-800'>₹{savings} Savings</Text>
@@ -137,9 +149,8 @@ const Cart = () => {
                     />
                 </View>
             </View>
-            {/* </ScrollView> */}
             <View className='bg-white'>
-                <View className='flex-row justify-between pr-5'>
+                {/* <View className='flex-row justify-between pr-5'>
                     <View className=' p-3 flex-row'>
                         <View>
                             <Icon
@@ -154,7 +165,7 @@ const Cart = () => {
                     <Pressable className='self-center'>
                         <Text className='font-bold text-md'>Change</Text>
                     </Pressable>
-                </View>
+                </View> */}
                 <Divider className='w-11/12 m-auto' />
                 <View className='p-3 flex-row justify-between bg-white pl-6'>
                     <View className='self-center'>
@@ -163,72 +174,16 @@ const Cart = () => {
                     <View>
                         <ButtonCompo
                             disable={false}
-                            handelClick={async () => {
-                                console.log("start");
-                                const selectedAddress = addresses.find(item => item.addressName === placeName)
-                                if (!selectedAddress) return
-                                const OrderId = uuid.v4()
-                                const Order = {
-                                    id: OrderId,
-                                    invoice: {},
-                                    items: items,
-                                    total_items: total_items,
-                                    total_price: total_price,
-                                    payment_details: {},
-                                    payment_method: 'online',
-                                    shipping_address: {
-                                        name: userDetails.name,
-                                        phone: userDetails.phoneNumber,
-                                        email: userDetails.email,
-                                        address_line_1: selectedAddress.houseFlatNo,
-                                        address_line_2: selectedAddress.buildingName,
-                                        lat: location?.latitude,
-                                        log: location?.latitude,
-                                        formatted_address: placeName
-                                    },
-                                    status: "created",
-                                    date_created: serverTimestamp()
-                                }
-                                // @ts-ignore
-                                Firebase.firestore().collection("Orders").doc(OrderId).set(Order)
-                                console.log("done");
-
-                                //     .then(() => {
-                                //         getOrderId(OrderId).then((res => {
-                                //             var options = {
-                                //                 currency: "INR",
-                                //                 description: 'Credits towards consultation',
-                                //                 image: 'https://i.imgur.com/3g7nmJC.png',
-                                //                 key: 'rzp_test_0IQb4FosmbMcvb', // Your api key
-                                //                 name: 'foo',
-                                //                 prefill: {
-                                //                     email: 'void@razorpay.com',
-                                //                     contact: '9191919191',
-                                //                     name: 'Razorpay Software'
-                                //                 },
-                                //                 theme: { color: '#F37254' },
-                                //                 order_id: res.data.id,
-                                //                 amount: Order.total_price
-                                //             }
-                                //             RazorpayCheckout.open(options).then(data => {
-                                //                 console.log(data);
-
-                                //             })
-
-                                //             RazorpayCheckout.open(options).then((data) => {
-                                //                 // handle success
-                                //                 alert(`Success: ${data.razorpay_payment_id}`);
-                                //             }).catch((error) => {
-                                //                 // handle failure
-                                //                 // alert(`Error: ${error.code} | ${error.description}`);
-                                //                 console.log(error);
-
-                                //             });
-                                //         }))
-                                // })
-                            }}
+                            handelClick={() => setIsOpen(true)}
                             loading={false}
-                            text='MAKE PAYMENT'
+                            text='PROCEED BOOKING'
+                        />
+                        <Drawer
+                            children={<SelectedAddress navigate={navigate} setIsOpen={setIsOpen} />}
+                            onClose={() => setIsOpen(false)}
+                            placement="bottom"
+                            isOpen={isOpen}
+
                         />
                     </View>
                 </View>
@@ -239,6 +194,70 @@ const Cart = () => {
 
 export default Cart
 
+
+const SelectedAddress = ({ navigate, setIsOpen }: {
+    navigate: NavigationProp<ReactNavigation.RootParamList>
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+
+}) => {
+
+    const { addresses, placeName, location } = useSelector((state: RootState) => state.Location)
+    const dispatch = useDispatch()
+    const [selectedAddress, setSelectedAddress] = useState<null | string>(null)
+
+    return (
+        <View className='bg-white p-5 space-y-2'>
+            <Text className='font-medium text-lg text-center'>Selected Address</Text>
+            <View>
+                {addresses.map(item => {
+                    const deliverable = location?.latitude && location?.longitude ?
+                        checkWithinRadius(17.3850, 78.4867, item.location.latitude, item.location.longitude) : false;
+                    console.log(item.location.latitude, item.location.longitude);
+                    return (
+                        <Pressable onPress={() => {
+                            if (!deliverable) return
+                            dispatch(setPlaceName(item.addressName))
+                            dispatch(setLocation(item.location))
+                            setSelectedAddress(item.addressName)
+                        }}>
+                            <View className={!(item.addressName === selectedAddress) ? 'p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1' : 'p-3 py-1 border-solid border-[1px] border-gray-500 bg-red-50 rounded-lg space-y-1 my-1'}>
+                                {deliverable ? (<Text className='text-blue-500'>DELIVERS TO</Text>) : (<Text className='text-red-500'>DOES  NOT DELIVER TO</Text>)}
+                                <Text className='text-lg font-semibold '>{item.addressName}</Text>
+                                <Text>{item.placeName}</Text>
+                            </View>
+                        </Pressable>
+                    )
+                })}
+            </View>
+            <View>
+                <Button
+                    variant={'outline'}
+                    onPress={() => {
+                        //@ts-ignore
+                        navigate.navigate('Your Location')
+                        setIsOpen(false)
+                    }}
+                >
+                    <Text>Add New Address</Text>
+                </Button>
+            </View>
+            <View className='mt-5'>
+                <ButtonCompo
+                    disable={false}
+                    handelClick={() => {
+                        const selectedAdd = addresses.find(item => item.addressName === selectedAddress)
+                        if (!selectedAdd) return
+                        //@ts-ignore
+                        navigate.navigate("SlotBook")
+                        setIsOpen(false)
+                    }}
+                    loading={false}
+                    text='Select Slot'
+                />
+            </View>
+        </View>
+    )
+}
 
 interface IOrderType {
     id: string;
@@ -270,3 +289,26 @@ interface IOrderType {
     status: string;
     date_created: any;
 }
+
+const checkWithinRadius = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const earthRadius = 6371; // Earth's radius in kilometers
+    const distanceThreshold = 1; // 5000 meters
+    const toRadians = (degrees: number) => {
+        return degrees * (Math.PI / 180);
+    };
+
+    const deltaLat = toRadians(lat2 - lat1);
+    const deltaLon = toRadians(lon2 - lon1);
+
+    const a =
+        Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+        Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(deltaLon / 2) *
+        Math.sin(deltaLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = earthRadius * c;
+
+    return distance <= distanceThreshold;
+};

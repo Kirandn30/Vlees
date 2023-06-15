@@ -10,7 +10,7 @@ import { setUser, setUserDetails } from '../../redux/UserSlice';
 import React from 'react';
 
 const UserDetails = () => {
-    const { User } = useSelector((state: RootState) => state.User)
+    const { User, userDetails } = useSelector((state: RootState) => state.User)
     const [image, setImage] = useState<{ error: boolean, uri: null | string }>({ error: false, uri: null });
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)

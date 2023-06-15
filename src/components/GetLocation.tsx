@@ -1,70 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import * as Location from 'expo-location';
-// import Geocoder from 'react-native-geocoding';
-import { Button, Card, HStack, Icon, Pressable, Text } from 'native-base';
+import React, { useEffect } from 'react';
+import { View, Alert, Linking, Platform } from 'react-native';
+import { HStack, Icon, Pressable, Text, Button } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
-import ModalCompo from './Modal';
-import MapView, { Marker } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
-import { Firebase } from '../../config';
+
 import { useDispatch, useSelector } from 'react-redux';
-import { setLocation, setPlaceName } from '../redux/Mapslice';
 import { RootState } from '../redux';
 
 
-const LocationAccess = () => {
+
+
+const LocationAccess = ({ getLocFunc }: any) => {
     const navigation = useNavigation();
     const dispatch = useDispatch()
     const { placeName } = useSelector((state: RootState) => state.Location)
 
     useEffect(() => {
-        (async () => {
-            try {
-                let { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    Alert.alert(
-                        'Permission Denied',
-                        'Permission to access location was denied',
-                        [{ text: 'OK' }]
-                    );
-                    return;
-                }
-                console.log("Start");
-                let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
-                const { latitude, longitude } = currentLocation.coords;
-                console.log(latitude, longitude);
-                const addMessage = Firebase.functions().httpsCallable('addMessage');
-                const coordinates = {
-                    latitude,
-                    longitude
-                }
-                const res = await addMessage(coordinates)
-                if (res.data.name) {
-                    dispatch(setPlaceName(res.data.name))
-                    dispatch(setLocation({
-                        latitude: latitude,
-                        longitude: longitude
-                    }))
-                } else {
-                    Alert.alert("Error fetching location try again")
-                }
-            } catch (error) {
-                console.log(error);
-                Alert.alert("Error fetching location try again")
-            }
-        })()
+        getLocFunc()
     }, [])
-
-
-
 
     return (
         <View>
-            {placeName ?
+            {placeName !== "not granted" ?
                 //@ts-ignore
-                <Pressable onPress={() => navigation.navigate("Your Location")}>
+                (<Pressable onPress={() => navigation.navigate("Your Location")}>
                     <HStack className='ml-3'>
                         <Icon color="red.500" size={5} as={<Ionicons name="location-outline" size={24} color="black" />} />
                         <Text className='mt-[1px] ml-1' numberOfLines={1} ellipsizeMode="tail" style={{ maxWidth: 100, minWidth: 30 }}>
@@ -72,15 +32,25 @@ const LocationAccess = () => {
                         </Text>
                         <Icon className='mt-[5px] ml-1 animate-pulse' size={3} as={<AntDesign name="down" size={24} color="black" />} />
                     </HStack>
-                </Pressable>
-                : <Text>Loading..</Text>}
+                </Pressable>)
+                : (<Text>
+                </Text>)}
         </View>
     );
 };
 
 export default LocationAccess;
 
-
+export const openAppSettings = async () => {
+    // For iOS
+    if (Platform.OS === 'ios') {
+        Linking.openURL('app-settings:')
+    }
+    // For Android
+    else if (Platform.OS === 'android') {
+        Linking.openSettings();
+    }
+}
 
 // useEffect(() => {
 //     const requestLocation = async () => {

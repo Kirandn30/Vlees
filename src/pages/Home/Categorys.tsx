@@ -11,7 +11,7 @@ const Categorys = () => {
     const navigation = useNavigation();
 
     return (
-        <View>
+        <View className='-z-10'>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {Category.map((category) => (
                     //@ts-ignore
@@ -19,7 +19,7 @@ const Categorys = () => {
                         <View key={category.id} className="rounded-full m-2">
                             <Image
                                 source={{ uri: category.image_url }}
-                                style={{ width: 70, height: 70, borderRadius: 50 }}
+                                style={{ width: 70, height: 70, borderRadius: 50, shadowColor: "1px 12px 42px -4px rgba(0,0,0,0.75)" }}
                                 alt={category.name}
                             />
                             <Text className='text-center font-bold mt-2 text-sm '>{category.name}</Text>

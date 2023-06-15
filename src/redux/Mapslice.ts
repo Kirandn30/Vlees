@@ -8,13 +8,22 @@ interface MapsType {
         longitudeDelta?: number
     } | null,
     placeName: null | string,
+    locationCopy: {
+        latitude: number
+        latitudeDelta?: number
+        longitude: number
+        longitudeDelta?: number
+    } | null,
+    placeNameCopy: null | string,
     addresses: any[]
 }
 
 const initialState: MapsType = {
     location: null,
     placeName: null,
-    addresses: []
+    addresses: [],
+    locationCopy: null,
+    placeNameCopy: null
 }
 
 const LocationSlice = createSlice({
@@ -29,11 +38,17 @@ const LocationSlice = createSlice({
         },
         setAddresses: (state, action) => {
             state.addresses = action.payload
-        }
+        },
+        setLocationCopy: (state, action) => {
+            state.locationCopy = action.payload
+        },
+        setPlaceNameCopy: (state, action) => {
+            state.placeNameCopy = action.payload
+        },
 
     },
 })
 
-export const { setLocation, setPlaceName, setAddresses } = LocationSlice.actions
+export const { setLocation, setPlaceName, setAddresses, setLocationCopy, setPlaceNameCopy } = LocationSlice.actions
 
 export default LocationSlice.reducer

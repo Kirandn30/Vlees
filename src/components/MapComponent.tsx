@@ -1,8 +1,9 @@
 import { Badge, Box, Button, CheckIcon, Divider, Drawer, FormControl, Icon, Input, Select, Text, VStack, View } from "native-base";
 import { Alert, StyleSheet } from "react-native";
+import Lottie from 'lottie-react-native';
 import MapView from "react-native-maps";
 import { Ionicons } from '@expo/vector-icons';
-import { setLocation, setPlaceName } from "../redux/Mapslice";
+import { setLocation, setLocationCopy, setPlaceName } from "../redux/Mapslice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux";
 import { useEffect, useRef, useState } from "react";
@@ -16,44 +17,50 @@ import { Formik } from "formik";
 import React from "react";
 
 export const MapComponent = () => {
-    const { location, placeName } = useSelector((state: RootState) => state.Location)
+    const { locationCopy, placeName, location } = useSelector((state: RootState) => state.Location)
     const [currentAdress, setCurrentAdress] = useState<null | string>(null)
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
     const nativate = useNavigation()
     const { User } = useSelector((state: RootState) => state.User)
+    const [deliverable, setDeliverable] = useState(true)
 
     // const [loading, setLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false);
+    const [liveLocationFromMap, setLiveLocationFromMap] = useState<any>()
     const onRegionChangeComplete = (newRegion: any) => {
-        dispatch(setLocation(newRegion));
+        setLiveLocationFromMap(newRegion)
+        dispatch(setLocationCopy(newRegion))
     };
 
     useEffect(() => {
         (async () => {
-            if (!location) return
+            if (!locationCopy) return
             const addMessage = Firebase.functions().httpsCallable('addMessage');
             const coordinates = {
-                latitude: location.latitude,
-                longitude: location.longitude
+                latitude: locationCopy.latitude,
+                longitude: locationCopy.longitude
             }
             const res = await addMessage(coordinates)
-            dispatch(setPlaceName(res.data.name))
             if (res.data.name) {
+                // dispatch(setPlaceName(res.data.name))
                 setCurrentAdress(res.data.name)
             } else {
                 Alert.alert("Error fetching location try again")
             }
         })()
-    }, [location])
+    }, [locationCopy]) 
 
     const handleSubmit = (values: FormValues) => {
         if (!User) return
         setLoading(true)
+        console.log(location);
+
         Firebase.firestore().collection("Address").add({
             ...values,
             userId: User.uid,
-            location, placeName
+            location: location,
+            placeName: currentAdress
         }).then(() => {
             setIsOpen(false)
             //@ts-ignore
@@ -63,100 +70,75 @@ export const MapComponent = () => {
 
     };
 
-    return (
-        <View className="h-screen">
-            {location && (
-                <View className='relative'>
-                    <MapView
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                        onRegionChangeComplete={onRegionChangeComplete}
-                        minZoomLevel={18}
-                        showsMyLocationButton
-                        showsUserLocation
-                        showsBuildings
-                    />
-                    <View style={styles.marker} >
-                        <View className="w-28 bg-black m-auto px-1 py-2 rounded-lg absolute bottom-9 -right-10">
-                            <Text className="text-white text-xs text-center">Move the map to adjust your location</Text>
+    useEffect(() => {
+        setLiveLocationFromMap(locationCopy)
+    }, [])
+
+    if (deliverable) {
+        return (
+            <View className="h-screen">
+                {locationCopy && (
+                    <View className='relative'>
+                        <MapView
+                            style={styles.map}
+                            initialRegion={{
+                                latitude: locationCopy.latitude,
+                                longitude: locationCopy.longitude,
+                                latitudeDelta: 0.0922,
+                                longitudeDelta: 0.0421,
+                            }}
+                            onRegionChangeComplete={onRegionChangeComplete}
+
+                            minZoomLevel={18}
+                            showsMyLocationButton
+                            showsUserLocation
+                            showsBuildings
+                        />
+                        <View style={styles.marker} >
+                            <View className="w-28 bg-black m-auto px-1 py-2 rounded-lg absolute bottom-9 -right-10">
+                                <Text className="text-white text-xs text-center">Move the map to adjust your location</Text>
+                            </View>
+                            <Icon color="red.500" size={8} as={<Ionicons name="ios-location-sharp" size={24} color="black" />} />
                         </View>
-                        <Icon color="red.500" size={8} as={<Ionicons name="ios-location-sharp" size={24} color="black" />} />
+                        <View className="absolute block bottom-14 bg-white p-5 w-full">
+                            <Text className="font-semibold mb-5">{currentAdress}</Text>
+                            <ButtonCompo
+                                handelClick={() => {
+                                    const withIn = isWithinHyderabadBoundaries(locationCopy.latitude, locationCopy.longitude)
+                                    setDeliverable(withIn);
+                                    if (!withIn) return
+                                    dispatch(setLocation(liveLocationFromMap));
+                                    setIsOpen(!isOpen);
+                                }}
+                                text="Confim & Continue"
+                                loading={false}
+                                disable={false}
+                            />
+                        </View>
                     </View>
-                    {/* <View className="rounded-full p-2 absolute right-5 bottom-56 bg-white border-solid border-gray-200 border-[1px]">
-                        <Icon
-                            onPress={async () => {
-                                try {
-                                    setLoading(true)
-                                    let { status } = await Location.requestForegroundPermissionsAsync();
-                                    if (status !== 'granted') {
-                                        Alert.alert(
-                                            'Permission Denied',
-                                            'Permission to access location was denied',
-                                            [{ text: 'OK' }]
-                                        );
-                                        return;
-                                    }
-                                    let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
-                                    const { latitude, longitude } = currentLocation.coords;
-                                    const addMessage = Firebase.functions().httpsCallable('addMessage');
-                                    const coordinates = {
-                                        latitude,
-                                        longitude
-                                    }
-                                    const res = await addMessage(coordinates)
-                                    if (res.data.name) {
-                                        dispatch(setPlaceName(res.data.name))
-                                        dispatch(setLocation({
-                                            latitude: latitude,
-                                            longitude: longitude
-                                        }))
-                                    } else {
-                                        Alert.alert("Error fetching location try again")
-                                    }
-                                } catch (error) {
-                                    Alert.alert("Error getting location try again")
-                                    console.log(error);
-
-                                } finally {
-                                    setLoading(false)
-                                }
-                            }}
-                            className={loading ? "text-blue-400" : "text-blue-700"}
-                            size={8}
-                            as={<MaterialIcons name="my-location" size={24} color="black" />}
-                        />
-                    </View> */}
-                    <View className="absolute block bottom-14 bg-white p-5 w-full">
-                        <Text className="font-semibold">{currentAdress}</Text>
-                        <ButtonCompo
-                            handelClick={() => {
-                                setIsOpen(!isOpen);
-                            }}
-                            text="Confim & Continue"
-                            loading={false}
-                            disable={false}
-                        />
-                    </View>
+                )}
+                <Drawer
+                    children={<Form
+                        currentAdress={currentAdress}
+                        handleSubmit={handleSubmit}
+                        loading={loading}
+                    />}
+                    onClose={() => setIsOpen(false)}
+                    placement="bottom"
+                    isOpen={isOpen}
+                />
+            </View>
+        );   
+    } else {
+        return (
+            <View className="h-screen flex-row justify-center items-center">
+                <View>
+                    <Lottie source={require('../../assets/not-found.json')} autoPlay loop style={{ height: 300 }} />
+                    <Text className="text-center font-bold text-lg text-gray-500">No Outlets found near you</Text>
                 </View>
-            )}
-            <Drawer
-                children={<Form
-                    currentAdress={currentAdress}
-                    handleSubmit={handleSubmit}
-                    loading={loading}
-                />}
-                onClose={() => setIsOpen(false)}
-                placement="bottom"
-                isOpen={isOpen}
-
-            />
-        </View>
-    );
+            </View>
+        )
+    }
 };
 
 const styles = StyleSheet.create({
@@ -182,7 +164,7 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
     return (
         <View>
             <View className="py-2 flex flex-row gap-1 bg-gray-100 px-3">
-                <Text className="w-4/5">{currentAdress}</Text>
+                <Text className="w-4/5 font-semibold">{currentAdress}</Text>
                 <Badge className="rounded-3xl bg-gray-200 self-center">Change</Badge>
             </View>
             <View className="bg-white p-3">
@@ -250,8 +232,10 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
                                     />
                                     <FormControl.ErrorMessage>{errors.addressName}</FormControl.ErrorMessage>
                                 </FormControl>
-                                <ButtonCompo
-                                    loading={loading} text={"Add address"} disable={loading} handelClick={handleSubmit} />
+                                <View className="mt-3">
+                                    <ButtonCompo
+                                        loading={loading} text={"Add address"} disable={loading} handelClick={handleSubmit} />
+                                </View>
                             </VStack>
                         </Box>
                     )}
@@ -286,4 +270,25 @@ const initialValues: FormValues = {
     // howToReach: '',
     contactNumber: '',
     addressName: '',
+};
+
+
+const isWithinHyderabadBoundaries = (latitude: number, longitude: number) => {
+    const hyderabadBounds = {
+        southwest: {
+            lat: 17.1889,
+            lng: 78.3055,
+        },
+        northeast: {
+            lat: 17.5778,
+            lng: 78.6219,
+        },
+    };
+
+    return (
+        latitude >= hyderabadBounds.southwest.lat &&
+        latitude <= hyderabadBounds.northeast.lat &&
+        longitude >= hyderabadBounds.southwest.lng &&
+        longitude <= hyderabadBounds.northeast.lng
+    );
 };

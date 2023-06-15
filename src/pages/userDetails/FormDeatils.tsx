@@ -11,12 +11,16 @@ import {
     ScrollView,
     View,
     Text,
-    Container
+    Container,
+    KeyboardAvoidingView
 } from 'native-base';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import RoundImageButton from './AvatarCompo';
 import ButtonCompo from '../../components/button';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux';
+import KeyboardAvoider from '../../components/keyboardAvoid';
 
 const validationSchema = yup.object().shape({
     name: yup.string().required('Name is required'),
@@ -38,137 +42,140 @@ const validationSchema = yup.object().shape({
 
 const ProfileForm = ({
     onSave, setImage, image, loading }: any) => {
+
+    const { userDetails } = useSelector((state: RootState) => state.User)
+
     return (
-        // <KeyboardShift>
         <Formik
             initialValues={{
-                name: '',
-                businessName: '',
-                phoneNumber: '',
-                email: '',
-                address: '',
-                pincode: '',
-                city: '',
-                state: '',
-                gstNumber: '',
+                name: userDetails ? userDetails.name : '',
+                businessName: userDetails ? userDetails.businessName : '',
+                phoneNumber: userDetails ? userDetails.phoneNumber : '',
+                email: userDetails ? userDetails.email : '',
+                address: userDetails ? userDetails.address : '',
+                pincode: userDetails ? userDetails.pincode : '',
+                city: userDetails ? userDetails.city : '',
+                state: userDetails ? userDetails.state : '',
+                gstNumber: userDetails ? userDetails.gstNumber : '',
             }}
             validationSchema={validationSchema}
             onSubmit={onSave}
         >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => {
+            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setValues }) => {
                 return (
                     <VStack space={4} mt={4}>
-                        <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
+                        {!userDetails && <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
                             <View>
                                 <RoundImageButton setImage={setImage} image={image} />
                             </View>
-                        </HStack>
-                        <ScrollView h="xl">
-                            <View className='p-4 pb-32'>
-                                <FormControl isInvalid={Boolean(errors.name) && touched.name}>
-                                    <FormControl.Label>Name</FormControl.Label>
-                                    <Input
-                                        value={values.name}
-                                        onChangeText={handleChange('name')}
-                                    />
-                                    <FormControl.ErrorMessage>{errors.name}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.businessName) && touched.businessName}>
-                                    <FormControl.Label>Business Name</FormControl.Label>
-                                    <Input
-                                        value={values.businessName}
-                                        onChangeText={handleChange('businessName')}
-                                    />
-                                    <FormControl.ErrorMessage>{errors.businessName}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.phoneNumber) && touched.phoneNumber}>
-                                    <FormControl.Label>Phone Number</FormControl.Label>
-                                    <Input
-                                        value={values.phoneNumber}
-                                        onChangeText={handleChange('phoneNumber')}
-                                        onBlur={handleBlur('phoneNumber')}
-                                        keyboardType="phone-pad"
-                                    />
-                                    <FormControl.ErrorMessage>{errors.phoneNumber}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.email) && touched.email}>
-                                    <FormControl.Label>Email</FormControl.Label>
-                                    <Input
-                                        value={values.email}
-                                        onChangeText={handleChange('email')}
-                                        keyboardType="email-address"
-                                    />
-                                    <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.address) && touched.address}>
-                                    <FormControl.Label>Address</FormControl.Label>
-                                    <TextArea
-                                        value={values.address}
-                                        onChangeText={handleChange('address')}
-                                        autoCompleteType={undefined} />
-                                    <FormControl.ErrorMessage>{errors.address}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.pincode) && touched.pincode}>
-                                    <FormControl.Label>Pincode</FormControl.Label>
-                                    <Input
-                                        value={values.pincode}
-                                        onChangeText={handleChange('pincode')}
-                                        keyboardType="number-pad"
-                                    />
-                                    <FormControl.ErrorMessage>{errors.pincode}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.city) && touched.city}>
-                                    <FormControl.Label>City</FormControl.Label>
-                                    <Input
-                                        value={values.city}
-                                        onChangeText={handleChange('city')}
-                                    />
-                                    <FormControl.ErrorMessage>{errors.city}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.state) && touched.state}>
-                                    <FormControl.Label>State</FormControl.Label>
-                                    <Select
-                                        placeholder="Select a state"
-                                        selectedValue={values.state}
-                                        onValueChange={handleChange('state')}
-                                        _selectedItem={{
-                                            bg: 'gray.200',
-                                            endIcon: <Text>✔</Text>,
-                                            borderRadius: "xl",
-                                            color: "blue.100"
-                                        }}
-                                    >
-                                        {states.map((state, index) => (
-                                            <Select.Item key={index} label={state.label} value={state.value} />
-                                        ))}
-                                    </Select>
-                                    <FormControl.ErrorMessage>{errors.state}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <FormControl isInvalid={Boolean(errors.gstNumber) && touched.gstNumber}>
-                                    <FormControl.Label>GST Number</FormControl.Label>
-                                    <Input
-                                        value={values.gstNumber}
-                                        onChangeText={handleChange('gstNumber')}
-                                        maxLength={11}
-                                        keyboardType="default"
-                                    />
-                                    <FormControl.ErrorMessage>{errors.gstNumber}</FormControl.ErrorMessage>
-                                </FormControl>
-                                <View className='mt-3'>
-                                    <ButtonCompo
-                                        handelClick={handleSubmit}
-                                        text='Confirm'
-                                        disable={false}
-                                        loading={loading}
-                                    />
+                        </HStack>}
+                        <ScrollView pagingEnabled className='flex-1 pb-9' >
+                            <KeyboardAvoidingView>
+                                <View className='p-4'>
+                                    <FormControl isInvalid={Boolean(errors.name && touched.name)}>
+                                        <FormControl.Label>Name</FormControl.Label>
+                                        <Input
+                                            value={values.name}
+                                            onChangeText={handleChange('name')}
+                                        />
+                                        <FormControl.ErrorMessage>{errors.name}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.businessName && touched.businessName)}>
+                                        <FormControl.Label>Business Name</FormControl.Label>
+                                        <Input
+                                            value={values.businessName}
+                                            onChangeText={handleChange('businessName')}
+                                        />
+                                        <FormControl.ErrorMessage>{errors.businessName}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.phoneNumber && touched.phoneNumber)}>
+                                        <FormControl.Label>Phone Number</FormControl.Label>
+                                        <Input
+                                            value={values.phoneNumber}
+                                            onChangeText={handleChange('phoneNumber')}
+                                            onBlur={handleBlur('phoneNumber')}
+                                            keyboardType="phone-pad"
+                                        />
+                                        <FormControl.ErrorMessage>{errors.phoneNumber}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.email && touched.email)}>
+                                        <FormControl.Label>Email</FormControl.Label>
+                                        <Input
+                                            value={values.email}
+                                            onChangeText={handleChange('email')}
+                                            keyboardType="email-address"
+                                        />
+                                        <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.address && touched.address)}>
+                                        <FormControl.Label>Address</FormControl.Label>
+                                        <TextArea
+                                            value={values.address}
+                                            onChangeText={handleChange('address')}
+                                            autoCompleteType={undefined} />
+                                        <FormControl.ErrorMessage>{errors.address}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.pincode && touched.pincode)}>
+                                        <FormControl.Label>Pincode</FormControl.Label>
+                                        <Input
+                                            value={values.pincode}
+                                            onChangeText={handleChange('pincode')}
+                                            keyboardType="number-pad"
+                                        />
+                                        <FormControl.ErrorMessage>{errors.pincode}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.city && touched.city)}>
+                                        <FormControl.Label>City</FormControl.Label>
+                                        <Input
+                                            value={values.city}
+                                            onChangeText={handleChange('city')}
+                                        />
+                                        <FormControl.ErrorMessage>{errors.city}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.state && touched.state)}>
+                                        <FormControl.Label>State</FormControl.Label>
+                                        <Select
+                                            placeholder="Select a state"
+                                            selectedValue={values.state}
+                                            onValueChange={handleChange('state')}
+                                            _selectedItem={{
+                                                bg: 'gray.200',
+                                                endIcon: <Text>✔</Text>,
+                                                borderRadius: "xl",
+                                                color: "blue.100"
+                                            }}
+                                        >
+                                            {states.map((state, index) => (
+                                                <Select.Item key={index} label={state.label} value={state.value} />
+                                            ))}
+                                        </Select>
+                                        <FormControl.ErrorMessage>{errors.state}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <FormControl isInvalid={Boolean(errors.gstNumber && touched.gstNumber)}>
+                                        <FormControl.Label>GST Number</FormControl.Label>
+                                        <Input
+                                            value={values.gstNumber}
+                                            onChangeText={handleChange('gstNumber')}
+                                            maxLength={11}
+                                            keyboardType="default"
+                                        />
+                                        <FormControl.ErrorMessage>{errors.gstNumber}</FormControl.ErrorMessage>
+                                    </FormControl>
+                                    <View className='mt-3'>
+                                        <ButtonCompo
+                                            handelClick={handleSubmit}
+                                            text='Confirm'
+                                            disable={false}
+                                            loading={loading}
+                                        />
+                                    </View>
                                 </View>
-                            </View>
+                            </KeyboardAvoidingView>
                         </ScrollView>
                     </VStack>
                 )
             }}
         </Formik>
-        // </KeyboardShift>
     );
 };
 

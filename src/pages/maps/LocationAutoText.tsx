@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 import { Firebase } from '../../../config';
 import { Divider, Icon, Input, Spinner } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
-import { setAddresses, setLocation, setPlaceName } from '../../redux/Mapslice';
+import { setAddresses, setLocation, setLocationCopy, setPlaceName } from '../../redux/Mapslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { Entypo } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { RootState } from '../../redux';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
 interface LocationAutocompleteProps { }
 
@@ -20,7 +21,7 @@ const getLocationSuggestions = Firebase.functions().httpsCallable('getLocationSu
 const getLongAndLat = Firebase.functions().httpsCallable('getLongAndLat');
 
 const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
-    const [query, setQuery] = useState('');
+    const [queryy, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingItem, setLoadingItem] = useState<string|null>(null)
@@ -33,15 +34,13 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
         setQuery(text);
     };
 
-
     useEffect(() => {
         if (!User) return
-        Firebase.firestore().collection("Address").where("userId", "==", User.uid).get()
-            .then((res) => {
-                dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
-            })
+        const unsub = onSnapshot(query(collection(Firebase.firestore(), "Address"), where("userId", "==", User.uid)), (snap) => {
+            dispatch(setAddresses(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
+        })
+        return () => unsub()
     }, [])
-
 
 
     const debouncedCallback = debounce(async (text: string) => {
@@ -54,12 +53,12 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     }, 400);
 
     useEffect(() => {
-        if (!query) {
+        if (!queryy) {
             setSuggestions([])
         } else {
-            debouncedCallback(query);
+            debouncedCallback(queryy);
         }
-    }, [query]);
+    }, [queryy]);
 
     const renderAddressSuggestion = (item: any) => {
         return (
@@ -69,7 +68,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                 //@ts-ignore
                 navigation.navigate('Home')
             }}>
-                <View className='p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-red-50 my-1'>
+                <View className='p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1'>
                     <Text className='text-lg font-semibold '>{item.addressName}</Text>
                     <Text>{item.placeName}</Text>
                 </View>
@@ -86,7 +85,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                         setLoading(true)
                         setLoadingItem(item.description)
                         const response = await getLongAndLat({ placeId: item.placeId });
-                        dispatch(setLocation({
+                        dispatch(setLocationCopy({
                             latitude: response.data.latitude,
                             longitude: response.data.longitude,
                         }))
@@ -121,16 +120,18 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     return (
         <View style={styles.container} className='h-screen'>
             <Input
-                value={query}
+                value={queryy}
                 onChangeText={handleQueryChange}
                 placeholder="Enter a location"
                 className='placeholder:text-lg font-semibold'
-                InputRightElement={query ? <Icon
+                style={{ borderColor: "white" }}
+                InputRightElement={queryy ? <Icon
                     onPress={() => setQuery("")}
                     as={<Entypo name="circle-with-cross" size={24} color="black" />}
                     className='text-gray-400 mr-3'
                 /> : <Text></Text>}
                 InputLeftElement={<Icon as={<AntDesign name="search1" size={24} color="black" />} className='text-gray-400 ml-3' />}
+                backgroundColor="#F3F4F6FF"
             />
             {
                 suggestions.length > 0 ? (

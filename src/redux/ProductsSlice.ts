@@ -4,13 +4,15 @@ import { User } from '@firebase/auth-types';
 interface ListingTypesType {
     Category: ICategory[],
     Products: IProductType[],
-    Variants: IVariantType[]
+    Variants: IVariantType[],
+    CategoryName: string
 }
 
 const initialState: ListingTypesType = {
     Category: [],
     Products: [],
-    Variants: []
+    Variants: [],
+    CategoryName: ''
 }
 
 const ListingSlice = createSlice({
@@ -25,11 +27,14 @@ const ListingSlice = createSlice({
         },
         setVariants: (state, action) => {
             state.Variants = action.payload
-        }
-    },
+        },
+        setCategoryName: (state, action) => {
+            state.CategoryName = action.payload
+        },
+    }
 })
 
-export const { setCategory, setProducts, setVariants } = ListingSlice.actions
+export const { setCategory, setProducts, setVariants, setCategoryName } = ListingSlice.actions
 
 export default ListingSlice.reducer
 

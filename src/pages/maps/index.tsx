@@ -10,4 +10,4 @@ const GetLocationDetails = () => {
     )
 }
 
-export default GetLocationDetails
+export default GetLocationDetails;
