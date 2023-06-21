@@ -1,38 +1,45 @@
 {
   "expo": {
-    "name": "meat-for-you",
-    "slug": "meat-for-you",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.kirandn30.meatforyou"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.kirandn30.meatforyou"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "cbb2da18-6d1d-4cee-a59e-2d071dc441da"
-      }
-    },
-    "owner": "kirandn30"
-  }
+		"name": "meat-for-you",
+		"slug": "meat-for-you",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/icon.png",
+		"userInterfaceStyle": "light",
+		"splash": {
+			"image": "./assets/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#ffffff"
+		},
+		"assetBundlePatterns": ["**/*"],
+		"plugins": [
+			[
+				"expo-location",
+				{
+					"locationAlwaysAndWhenInUsePermission": "Allow Vlees to use your location"
+				}
+			]
+		],
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.kirandn30.meatforyou"
+		},
+		"android": {
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/adaptive-icon.png",
+				"backgroundColor": "#ffffff"
+			},
+			"package": "com.kirandn30.meatforyou",
+			"permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+		},
+		"web": {
+			"favicon": "./assets/favicon.png"
+		},
+		"extra": {
+			"eas": {
+				"projectId": "cbb2da18-6d1d-4cee-a59e-2d071dc441da"
+			}
+		},
+		"owner": "kirandn30"
+	}
 }

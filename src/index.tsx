@@ -25,7 +25,7 @@ import TermsCompo from './pages/TermsCompo'
 import AboutPage from './pages/AboutPage'
 import FeedBack from './pages/FeedBack'
 import MangageAddress from './pages/MangageAddress'
-import { setAddresses } from './redux/Mapslice'
+import { setAddresses, setFetchingLocation } from './redux/Mapslice'
 import SingleOrder from './pages/Orders/SingleOrder'
 import SlotBook from './pages/Slot'
 import ButtomNavBar from './components/ButtomNavBar'
@@ -33,13 +33,21 @@ import { navigationRef } from './components/RootNavigation'
 import { TransitionSpecs } from '@react-navigation/stack';
 import ProductPage from './components/ProductPage'
 import * as IntentLauncher from 'expo-intent-launcher';
-import * as Location from 'expo-location';
+import { getCurrentPositionAsync, Accuracy, requestForegroundPermissionsAsync } from 'expo-location';
 import { Firebase } from '../config';
 import { setLocation, setPlaceName } from './redux/Mapslice';
+import { FetchLocation } from './components/FetchLocation'
+import ShowCartDetails from './components/ShowCartDetails'
+import GetHelpOrder from './components/GetHelpOrder'
+import Geolocation from '@react-native-community/geolocation';
+
+
 const Pages = () => {
     const Stack = createStackNavigator();
     const { User, userDetails } = useSelector((state: RootState) => state.User)
     const { CategoryName } = useSelector((state: RootState) => state.Listings)
+    const { fetchinglocation, placeName } = useSelector((state: RootState) => state.Location)
+    const { getHelpOrderData } = useSelector((state: RootState) => state.Orders)
 
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(true);
@@ -47,6 +55,7 @@ const Pages = () => {
         const unsub = Firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 dispatch(setUser(user))
+                dispatch(setPlaceName("fetch"))
                 Firebase.firestore().collection("Address").where("userId", "==", user.uid).get()
                     .then((res) => {
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
@@ -58,6 +67,13 @@ const Pages = () => {
         return () => unsub();
     }, [])
 
+    useEffect(() => {
+        if (placeName === "fetch") {
+            dispatch(setFetchingLocation(true))
+        } else {
+            dispatch(setFetchingLocation(false))
+        }
+    }, [placeName])
 
     useEffect(() => {
         if (!User) return
@@ -81,44 +97,65 @@ const Pages = () => {
         </View>);
     }
 
-    const getLocFunc = async () => {
-        try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert(
-                    'Permission Denied',
-                    'Permission to access location was denied',
-                    [{ text: 'Give Access', onPress: openAppSettings }]
-                );
-                dispatch(setPlaceName("not granted"))
-                return;
-            }
-            Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Highest
-            }).then((currentLocation) => {
-                const { latitude, longitude } = currentLocation.coords;
-                const addMessage = Firebase.functions().httpsCallable('addMessage');
-                const coordinates = {
-                    latitude,
-                    longitude
+    const getLocFunc = () => {
+        console.log("1");
+        requestForegroundPermissionsAsync()
+            .then(({ status }) => {
+                if (status !== 'granted') {
+                    Alert.alert(
+                        'Permission Denied',
+                        'Permission to access location was denied',
+                        [{ text: 'Give Access', onPress: openAppSettings }]
+                    );
+                    dispatch(setPlaceName("not granted"))
+                    return;
                 }
-                addMessage(coordinates).then((res) => {
-                    if (res.data.name) {
-                        dispatch(setPlaceName(res.data.name))
-                        dispatch(setLocation({
-                            latitude: latitude,
-                            longitude: longitude
-                        }))
-                    } else {
-                        Alert.alert("Error fetching location try again")
-                    }
+                console.log("2");
+                getCurrentPositionAsync({
+                    accuracy: Accuracy.Balanced,
                 })
+                    .then((currentLocation) => {
+                        const { latitude, longitude } = currentLocation.coords;
+                        const addMessage = Firebase.functions().httpsCallable('addMessage');
+                        const coordinates = {
+                            latitude,
+                            longitude
+                        }
+                        console.log("3");
+                        addMessage(coordinates)
+                            .then((res) => {
+                                if (res.data.name) {
+                                    dispatch(setPlaceName(res.data.name))
+                                    dispatch(setLocation({
+                                        latitude: latitude,
+                                        longitude: longitude
+                                    }))
+                                    console.log('4');
+                                } else {
+                                    Alert.alert("Error fetching location try again")
+                                }
+                            })
+                            .catch((error) => {
+                                console.log(error);
+
+                            })
+                    })
+                    .catch((error) => {
+                        console.log(error);
+
+                    })
+            }).catch((error) => {
+                console.log(error);
+
             })
-        } catch (error) {
-            console.log(error);
-            Alert.alert("Error fetching location try again")
-        }
     }
+
+
+    if (fetchinglocation) {
+        return (
+            <FetchLocation getLocFunc={getLocFunc} />
+        )
+    } else {
     if (User && userDetails) {
         return (
             <NavigationContainer ref={navigationRef}>
@@ -146,10 +183,9 @@ const Pages = () => {
                     <Stack.Screen
                         name='Home'
                         component={Home}
-                        initialParams={{ getLocFunc }}
                         options={{
                             headerRight: () => (<ProfileManagment />),
-                            headerLeft: () => (<GetLocation getLocFunc={getLocFunc} />),
+                            headerLeft: () => (<GetLocation />),
                             headerTitle: "",
                             headerStyle: { shadowColor: " 1px 12px 10px -4px rgba(0,0,0,0.7 5)" },
                         }}
@@ -270,6 +306,7 @@ const Pages = () => {
                         component={SingleOrder}
                         options={{
                             headerLeft: () => (<GoBack />),
+                            headerRight: () => (<GetHelpOrder getHelpOrderData={getHelpOrderData} />),
                             headerTitle: "Order"
                         }}
                     />
@@ -287,6 +324,7 @@ const Pages = () => {
                     />
                 </Stack.Navigator>
                 <View>
+                    <ShowCartDetails />
                     <ButtomNavBar Stack={Stack} />
                 </View>
             </NavigationContainer>
@@ -297,10 +335,11 @@ const Pages = () => {
         </View>)
     } else {
         return (
-            <View className="min-h-screen bg-white">
+            <View className="bg-white">
                 <FirebaseOTP />
             </View>
         )
+    }
     }
 }
 

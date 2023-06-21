@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux';
 import { Card, Image } from 'native-base';
 import ProductCard from '../components/ProductCard';
-import ShowCartDetails from '../components/ShowCartDetails';
 import SearchBar from '../components/SearchBar';
 import ButtomNavBar from '../components/ButtomNavBar';
 import { FlatList } from 'react-native-gesture-handler';
@@ -55,7 +54,7 @@ const Products: React.FC<Props> = ({ route }) => {
 
 
     return (
-        !isEmpty ? <View className='flex-1 justify-between'>
+        !isEmpty ? <View className=''>
             <View className='mt-5'>
                 <FlatList
                     style={{ height: items.length > 0 ? deviceHeight - 200 : deviceHeight - 150 }}
@@ -64,9 +63,6 @@ const Products: React.FC<Props> = ({ route }) => {
                     keyExtractor={(item) => item.id}
                 />
             </View> 
-            <View className=''>
-                <ShowCartDetails />
-            </View>
         </View> : (
             <View className="h-screen flex-row justify-center items-center">
                 <View>

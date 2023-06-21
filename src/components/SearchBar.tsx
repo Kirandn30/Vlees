@@ -49,9 +49,9 @@ const SearchBar = () => {
                     />
                 </View>}
             </View>
-            <Button bgColor="#F3F4F6FF">
+            {/* <Button bgColor="#F3F4F6FF">
                 <Icon as={<Ionicons name="filter" size={24} color="black" />} />
-            </Button>
+            </Button> */}
         </View>
     )
 }

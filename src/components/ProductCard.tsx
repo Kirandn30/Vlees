@@ -1,14 +1,15 @@
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native'
+import { View, Text, StyleSheet, Dimensions, Pressable, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { Button, Card, Drawer, Icon, Image } from 'native-base'
 import Carousel from 'react-native-snap-carousel';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import VarientsCard from './VarientsCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux';
 import { addItems, removeItems } from '../redux/CartSlice';
 import { Entypo } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
+import AnimatedDotsCarousel from 'react-native-animated-dots-carousel';
+
 
 const ProductCard = ({ product, navigate }: {
     product: IProductType,
@@ -16,52 +17,39 @@ const ProductCard = ({ product, navigate }: {
 }) => {
     const { items } = useSelector((state: RootState) => state.Cart)
     const { Products } = useSelector((state: RootState) => state.Listings)
-
     const deviceWidth = Dimensions.get("window").width;
     const [drawer, setDrawer] = useState(false)
     const dispatch = useDispatch()
-
-    const renderItem = ({ item }: { item: string }) => {
-        return (
-            <View >
-                <Image source={{ uri: item }} alt='' className='h-40' />
-            </View>
-        );
-    };
+    const [index, setIndex] = React.useState<number>(0);
 
     return (
         <Pressable onPress={() => {
-            console.log("isdgkuhkdsug");
             //@ts-ignore
             navigate.navigate('ProductPage', { productId: product.id })
         }}>
-            <View className='mb-3 mx-5 shadow-2xl bg-white overflow-hidden rounded-xl -z-50'
-                style={{
-                    shadowColor: "1px 12px 42px -4px rgba(0,0,0,0.75)"
-                }}
-            >
-                <View className=''>
-                    <Carousel
-                        data={product.image_url}
-                        renderItem={renderItem}
-                        sliderWidth={deviceWidth - 40}
-                        itemWidth={deviceWidth - 40}
-                        layout='default'
-                        showsHorizontalScrollIndicator
-                        indicatorStyle="default"
-                        loop
-                        className='-z-50'
+            <View>
+                <View className='flex-row mx-1 mb-3 rounded-md bg-white p-1'>
+                    <Image
+                        source={{ uri: product.image_url[0] }}
+                        alt={product.name}
+                        style={{ width: deviceWidth / 2.5, height: deviceWidth / 3, borderRadius: 5 }}
+                        className=''
                     />
-                    <View className='flex-row justify-between p-3'>
-                        <View className='space-y-1'>
-                            <Text className='font-bold text-md'>{product.variantes.length === 1 ? product.variantes[0].name : product.name}</Text>
-                            {product.variantes.length === 1 ? (
-                                <View className='flex-row items-center'>
-                                    <View className='w-3/4'>
-                                        <Text className='font-semibold text-lg'>₹{product.variantes[0].discountedPrice}</Text>
-                                        <Text className='text-gray-400 line-through'>{product.variantes[0].originalPrice}</Text>
+                    <View
+                        className='p-3'
+                        style={{ width: deviceWidth - deviceWidth / 2.3 }}
+                    >
+                        {product.variantes.length === 1 ? (
+                            <View className='flex justify-between'>
+                                <Text numberOfLines={2} className='text-base font-semibold w-44'>{product.variantes[0].name}</Text>
+                                <View className='flex-row justify-between mt-9'>
+                                    <View>
+                                        <View>
+                                            <Text className='font-semibold text-lg'>₹{product.variantes[0].discountedPrice}</Text>
+                                            <Text className='text-gray-400 line-through'>₹{product.variantes[0].originalPrice}</Text>
+                                        </View>
                                     </View>
-                                    <View className='flex-row'>
+                                    <View className='self-end'>
                                         {Boolean(items.find(a => a.selectedVariant.id === product.variantes[0].id)) ? (
                                             <View className='flex flex-row items-center gap-2'>
                                                 <Pressable
@@ -115,32 +103,32 @@ const ProductCard = ({ product, navigate }: {
                                                 }}
                                             >
                                                 <Text
-                                                    className='font-semibold px-3 text-green-600'
+                                                        className='font-semibold px-3 text-[#B9181DFF]'
                                                 >ADD</Text>
                                             </Button>
                                         )}
                                     </View>
                                 </View>
-                            ) : (
-                                <Text className='text-xs text-gray-500 w-11/12'>{product.caption}</Text>
-                            )}
-                        </View>
-                        {product.variantes.length === 1 ? (
-                            <View>
-
                             </View>
                         ) : (
-                            <View className='self-end'>
-                                <Button
-                                    size="xs"
-                                    variant="outline"
-                                    onPress={() => setDrawer(true)}
-                                >
-                                    <Text className='font-semibold text-green-600'>{product.variantes.length} Options</Text>
-                                </Button>
-                            </View >
+                            <View>
+                                    <View className='space-y-1'>
+                                        <Text numberOfLines={2} className='text-base font-semibold w-44'>{product.name}</Text>
+                                        <Text className='text-xs text-gray-500 w-44'>{product.caption}</Text>
+                                    </View>
+                                    <View className='self-end mt-3'>
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            onPress={() => setDrawer(true)}
+                                            style={{ borderColor: "#B9181DFF", backgroundColor: "#faf6f2", borderWidth: 0.3 }}
+                                        >
+                                            <Text className='font-semibold text-[#B9181DFF]'>{product.variantes.length} Options</Text>
+                                        </Button>
+                                    </View >
+                                </View> 
                         )}
-                    </View >
+                    </View>
                 </View>
                 <Drawer
                     isOpen={drawer}

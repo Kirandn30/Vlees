@@ -1,11 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 interface OrderTypesType {
-    Orders: any[]
+    Orders: any[],
+    getHelpOrderData: null | any
 }
 
 const initialState: OrderTypesType = {
-    Orders: []
+    Orders: [],
+    getHelpOrderData: null
 }
 
 const OrderSlice = createSlice({
@@ -14,10 +16,13 @@ const OrderSlice = createSlice({
     reducers: {
         setOrders: (state, action) => {
             state.Orders = action.payload
+        },
+        setGetHelpOrderId: (state, action) => {
+            state.getHelpOrderData = action.payload
         }
     }
 })
 
-export const { setOrders } = OrderSlice.actions
+export const { setOrders, setGetHelpOrderId } = OrderSlice.actions
 
 export default OrderSlice.reducer

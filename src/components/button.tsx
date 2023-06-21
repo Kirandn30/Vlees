@@ -2,7 +2,7 @@ import { View } from 'react-native'
 import React from 'react'
 import { Button } from "native-base";
 
-const ButtonCompo = ({ handelClick, text, disable, loading }: { loading: boolean, handelClick: () => void, text: string, disable: boolean }) => {
+const ButtonCompo = ({ handelClick, text, disable, loading }: { loading?: boolean, handelClick: () => void, text: string, disable?: boolean }) => {
     return (
         <View>
             <Button

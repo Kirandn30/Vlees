@@ -88,11 +88,9 @@ export const MapComponent = () => {
                                 longitudeDelta: 0.0421,
                             }}
                             onRegionChangeComplete={onRegionChangeComplete}
-
                             minZoomLevel={18}
                             showsMyLocationButton
                             showsUserLocation
-                            showsBuildings
                         />
                         <View style={styles.marker} >
                             <View className="w-28 bg-black m-auto px-1 py-2 rounded-lg absolute bottom-9 -right-10">

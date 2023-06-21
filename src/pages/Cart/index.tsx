@@ -62,7 +62,10 @@ const Cart = () => {
                         <Text className='font-bold'>{item.product.name}</Text>
                         <Text className='font-semibold text-xs'>{item.selectedVariant.name}</Text>
                         <Text className='text-xs'>{item.selectedVariant.weight}{item.selectedVariant.unit}</Text>
-                        <Text className='font-bold'>₹{item.selectedVariant.discountedPrice * item.quantity}</Text>
+                        <View className='flex-row gap-x-1'>
+                            <Text className='font-bold'>₹{item.selectedVariant.discountedPrice * item.quantity}</Text>
+                            <Text className='text-gray-500 text-xs line-through'>₹{item.selectedVariant.originalPrice * item.quantity}</Text>
+                        </View>
                     </View>
                 </View>
                 <View className='self-center'>
@@ -110,7 +113,7 @@ const Cart = () => {
                     <Text className='text-2xl font-bold text-green-800'>₹{savings} Savings</Text>
                     <Text className='text-green-800'>Save more on every order</Text>
                 </View>
-                <View className='p-4 bg-white flex flex-row'>
+                {/* <View className='p-4 bg-white flex flex-row'>
                     <Icon
                         as={<MaterialIcons name="local-offer" />}
                         size={25}
@@ -129,7 +132,7 @@ const Cart = () => {
                         size={18}
                         color="black"
                     />
-                </View>
+                </View> */}
                 <View className='p-4 bg-white'>
                     <View className='flex flex-row gap-3'>
                         <Icon

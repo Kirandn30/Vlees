@@ -1,17 +1,15 @@
 import React from 'react';
+import { Platform, SafeAreaView } from "react-native"
 import {
-    Box,
     VStack,
     HStack,
     FormControl,
     Input,
     TextArea,
-    Button,
     Select,
     ScrollView,
     View,
     Text,
-    Container,
     KeyboardAvoidingView
 } from 'native-base';
 import { Formik } from 'formik';
@@ -20,7 +18,6 @@ import RoundImageButton from './AvatarCompo';
 import ButtonCompo from '../../components/button';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux';
-import KeyboardAvoider from '../../components/keyboardAvoid';
 
 const validationSchema = yup.object().shape({
     name: yup.string().required('Name is required'),
@@ -46,31 +43,33 @@ const ProfileForm = ({
     const { userDetails } = useSelector((state: RootState) => state.User)
 
     return (
-        <Formik
-            initialValues={{
-                name: userDetails ? userDetails.name : '',
-                businessName: userDetails ? userDetails.businessName : '',
-                phoneNumber: userDetails ? userDetails.phoneNumber : '',
-                email: userDetails ? userDetails.email : '',
-                address: userDetails ? userDetails.address : '',
-                pincode: userDetails ? userDetails.pincode : '',
-                city: userDetails ? userDetails.city : '',
-                state: userDetails ? userDetails.state : '',
-                gstNumber: userDetails ? userDetails.gstNumber : '',
-            }}
-            validationSchema={validationSchema}
-            onSubmit={onSave}
-        >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setValues }) => {
-                return (
-                    <VStack space={4} mt={4}>
-                        {!userDetails && <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
-                            <View>
-                                <RoundImageButton setImage={setImage} image={image} />
-                            </View>
-                        </HStack>}
-                        <ScrollView pagingEnabled className='flex-1 pb-9' >
-                            <KeyboardAvoidingView>
+        <ScrollView pagingEnabled className={userDetails ? 'pb-9' : 'pb-9'}>
+            <KeyboardAvoidingView
+            // behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <Formik
+                    initialValues={{
+                        name: userDetails ? userDetails.name : '',
+                        businessName: userDetails ? userDetails.businessName : '',
+                        phoneNumber: userDetails ? userDetails.phoneNumber : '',
+                        email: userDetails ? userDetails.email : '',
+                        address: userDetails ? userDetails.address : '',
+                        pincode: userDetails ? userDetails.pincode : '',
+                        city: userDetails ? userDetails.city : '',
+                        state: userDetails ? userDetails.state : '',
+                        gstNumber: userDetails ? userDetails.gstNumber : '',
+                    }}
+                    validationSchema={validationSchema}
+                    onSubmit={onSave}
+                >
+                    {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setValues }) => {
+                        return (
+                            <VStack space={4} mt={4}>
+                                {!userDetails && <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
+                                    <View>
+                                        <RoundImageButton setImage={setImage} image={image} />
+                                    </View>
+                                </HStack>}
                                 <View className='p-4'>
                                     <FormControl isInvalid={Boolean(errors.name && touched.name)}>
                                         <FormControl.Label>Name</FormControl.Label>
@@ -164,18 +163,18 @@ const ProfileForm = ({
                                     <View className='mt-3'>
                                         <ButtonCompo
                                             handelClick={handleSubmit}
-                                            text='Confirm'
+                                            text={userDetails ? 'Update' : 'Confirm'}
                                             disable={false}
                                             loading={loading}
                                         />
                                     </View>
                                 </View>
-                            </KeyboardAvoidingView>
-                        </ScrollView>
-                    </VStack>
-                )
-            }}
-        </Formik>
+                            </VStack>
+                        )
+                    }}
+                </Formik>
+            </KeyboardAvoidingView>
+        </ScrollView>
     );
 };
 

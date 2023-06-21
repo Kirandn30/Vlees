@@ -2,9 +2,11 @@ import { Pressable, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Divider, Icon, Text } from 'native-base'
 import { AntDesign, FontAwesome5 } from '@expo/vector-icons';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { navigationRef } from './RootNavigation';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux';
 
 const ButtomNavBar = ({ Stack }: {
     Stack: any
@@ -13,15 +15,12 @@ const ButtomNavBar = ({ Stack }: {
     const [name, setName] = useState('Home')
 
     useEffect(() => {
-        const unsubscribe = navigationRef.current?.addListener('state', () => {
+        navigationRef.current?.addListener('state', () => {
             setName(navigationRef.current.getCurrentRoute()?.name)
         });
-        return () => {
-            unsubscribe();
-        };
     }, [])
 
-    if (['Home', 'Products', 'Orders', 'Contact'].includes(name)) {
+    if (['Home', 'Products', 'Orders', 'Contact', "ProductPage"].includes(name)) {
         return (
             <View>
                 <Divider />

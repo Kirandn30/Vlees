@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Alert, Linking, Platform } from 'react-native';
-import { HStack, Icon, Pressable, Text, Button } from 'native-base';
+import { View, Linking, Platform } from 'react-native';
+import { HStack, Icon, Pressable, Text } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,17 +8,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux';
 
-
-
-
-const LocationAccess = ({ getLocFunc }: any) => {
+const LocationAccess = () => {
     const navigation = useNavigation();
-    const dispatch = useDispatch()
     const { placeName } = useSelector((state: RootState) => state.Location)
-
-    useEffect(() => {
-        getLocFunc()
-    }, [])
 
     return (
         <View>
@@ -26,7 +18,7 @@ const LocationAccess = ({ getLocFunc }: any) => {
                 //@ts-ignore
                 (<Pressable onPress={() => navigation.navigate("Your Location")}>
                     <HStack className='ml-3'>
-                        <Icon color="red.500" size={5} as={<Ionicons name="location-outline" size={24} color="black" />} />
+                        <Icon color="#B9181DFF" size={5} as={<Ionicons name="location-outline" size={24} color="black" />} />
                         <Text className='mt-[1px] ml-1' numberOfLines={1} ellipsizeMode="tail" style={{ maxWidth: 100, minWidth: 30 }}>
                             {placeName}
                         </Text>

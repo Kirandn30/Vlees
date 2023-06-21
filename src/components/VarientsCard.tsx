@@ -10,7 +10,7 @@ import { Icon } from 'native-base'
 
 const VarientsCard = ({ variantes, setDrawer }: {
     variantes: IVariantType[]
-    setDrawer: React.Dispatch<React.SetStateAction<boolean>>
+    setDrawer?: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
     const { Products } = useSelector((state: RootState) => state.Listings)
     const { items } = useSelector((state: RootState) => state.Cart)
@@ -32,7 +32,7 @@ const VarientsCard = ({ variantes, setDrawer }: {
     }, [items])
 
     return (
-        <View className='bg-white p-5'>
+        <View className={setDrawer ? 'bg-white p-5 rounded-t-2xl' : ''}>
             {variantes.map(item => {
                 return (
                     <View key={item.id} className='p-3 px-5 rounded-2xl bg-gray-100 flex-row justify-between mb-3 shadow'>
@@ -94,7 +94,7 @@ const VarientsCard = ({ variantes, setDrawer }: {
                                     }}
                                 >
                                     <Text
-                                        className='font-extrabold text-xl'
+                                            className='font-extrabold text-xl text-[#B9181DFF]'
                                     >ADD</Text>
                                 </Pressable>
                             )}
@@ -102,12 +102,12 @@ const VarientsCard = ({ variantes, setDrawer }: {
                     </View>
                 )
             })}
-            <View className='p-3 bg-green-700 rounded-2xl flex flex-row justify-between px-6'>
+            {setDrawer && <View className='p-3 bg-black rounded-2xl flex flex-row justify-between px-6'>
                 <Text className='text-white text-base font-semibold'>Item Total : ₹{total}</Text>
                 <Pressable onPress={() => setDrawer(false)}>
                     <Text className='text-white text-base font-semibold'>Confirm</Text>
                 </Pressable>
-            </View>
+            </View>}
         </View>
     )
 }

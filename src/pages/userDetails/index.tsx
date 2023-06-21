@@ -14,9 +14,6 @@ const UserDetails = () => {
     const [image, setImage] = useState<{ error: boolean, uri: null | string }>({ error: false, uri: null });
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
-    const handleBack = () => {
-        // Handle the back button action
-    };
 
     const handleRightButtonPress = () => {
         Firebase.auth().signOut().then(() => {
@@ -25,7 +22,7 @@ const UserDetails = () => {
     };
     const handleSave = async (formData: any) => {
         try {
-            if (image.uri && User?.uid) {
+            if (image.uri && User) {
                 setLoading(true)
                 const response = await fetch(image.uri);
                 const blob = await response.blob();
@@ -53,7 +50,6 @@ const UserDetails = () => {
                 })
             } else {
                 setImage(prev => ({ ...prev, error: true }));
-
             }
         } catch (error) {
             console.log("this error", error);
@@ -64,15 +60,11 @@ const UserDetails = () => {
 
 
     return (
-        <View>
-            <VStack>
-                <UserDeatilsHeader title="My Profile" onBack={handleBack} onRightButtonPress={handleRightButtonPress} />
-                <Box safeArea>
-                    <VStack justifyContent="center">
+        <View className='flex-1'>
+            <UserDeatilsHeader title="My Profile" onRightButtonPress={handleRightButtonPress} />
+            <ScrollView pagingEnabled className='bg-white pb-3 h-screen'>
                         <ProfileForm onSave={handleSave} setImage={setImage} image={image} loading={loading} />
-                    </VStack>
-                </Box>
-            </VStack>
+            </ScrollView>
         </View>
     )
 }

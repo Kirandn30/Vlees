@@ -21,7 +21,6 @@ const Orders = () => {
         onSnapshot(query(collection(Firebase.firestore(), "Orders"), where("UserId", "==", User.uid), orderBy("date_created", "desc")), (snap) => {
             dispatch(setOrders(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
         })
-
     }, [])
 
     return (
