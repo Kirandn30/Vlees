@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, ScrollView, VStack, View } from 'native-base';
-import { Alert } from "react-native"
+import { Box, ScrollView, VStack, View,KeyboardAvoidingView} from 'native-base';
+import { Alert,} from "react-native"
 import UserDeatilsHeader from './UserDeatilsHeader';
 import ProfileForm from './FormDeatils';
 import { Firebase } from '../../../config';
@@ -61,10 +61,13 @@ const UserDetails = () => {
 
     return (
         <View className='flex-1'>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}  keyboardVerticalOffset={50} >
             <UserDeatilsHeader title="My Profile" onRightButtonPress={handleRightButtonPress} />
-            <ScrollView pagingEnabled className='bg-white pb-3 h-screen'>
+            
+            <ScrollView className='bg-white h-screen'>
                         <ProfileForm onSave={handleSave} setImage={setImage} image={image} loading={loading} />
             </ScrollView>
+            </KeyboardAvoidingView>
         </View>
     )
 }

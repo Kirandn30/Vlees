@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, SafeAreaView } from "react-native"
+import { Platform, SafeAreaView, } from "react-native"
 import {
     VStack,
     HStack,
@@ -43,10 +43,8 @@ const ProfileForm = ({
     const { userDetails } = useSelector((state: RootState) => state.User)
 
     return (
-        <ScrollView pagingEnabled className={userDetails ? 'pb-9' : 'pb-9'}>
-            <KeyboardAvoidingView
-            // behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
+        <ScrollView >
+            
                 <Formik
                     initialValues={{
                         name: userDetails ? userDetails.name : '',
@@ -64,7 +62,7 @@ const ProfileForm = ({
                 >
                     {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setValues }) => {
                         return (
-                            <VStack space={4} mt={4}>
+                            <VStack space={4} mt={4} className="mb-20">
                                 {!userDetails && <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
                                     <View>
                                         <RoundImageButton setImage={setImage} image={image} />
@@ -173,7 +171,7 @@ const ProfileForm = ({
                         )
                     }}
                 </Formik>
-            </KeyboardAvoidingView>
+                
         </ScrollView>
     );
 };
