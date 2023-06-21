@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { View,Dimensions } from 'react-native'
 import React, { useEffect } from 'react'
 import { Firebase } from '../../../config'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,10 +9,12 @@ import ProductCard from '../../components/ProductCard'
 import { FlatList, ScrollView } from 'react-native-gesture-handler'
 import SearchBar from '../../components/SearchBar'
 import { useNavigation, } from '@react-navigation/native';
+import { Divider } from 'native-base'
 
 const Home = () => {
     const dispatch = useDispatch()
     const { Products } = useSelector((state: RootState) => state.Listings)
+    const deviceWidth = Dimensions.get("window").width;
 
     const navigate = useNavigation()
     useEffect(() => {
@@ -29,7 +31,11 @@ const Home = () => {
     const renderItem = ({ item }: { item: IProductType }) => {
         if (item.variantes.length > 0) {
             return (
+                <>
+                
                 <ProductCard product={item} navigate={navigate} />
+                <Divider bg="coolGray.300" thickness="1" width={deviceWidth * 0.9} className="self-center mb-1" />
+                </>
             )
         } else {
             return <View></View>
