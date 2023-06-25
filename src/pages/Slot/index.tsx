@@ -62,7 +62,6 @@ const SlotBook = () => {
     if ((typeof isTimeGreaterTan3PM) === "string") {
         return <Text>Loading...</Text>
     }
-    console.log(day.seletedDay);
 
     return (
         <View className='min-h-screen bg-white'>
