@@ -6,7 +6,7 @@ import {
   Pressable,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Card, Drawer, Icon, Image, Divider } from "native-base";
 import Carousel from "react-native-snap-carousel";
 import VarientsCard from "./VarientsCard";
@@ -25,11 +25,17 @@ const ProductCard = ({
   navigate: NavigationProp<ReactNavigation.RootParamList>;
 }) => {
   const { items } = useSelector((state: RootState) => state.Cart);
-  const { Products } = useSelector((state: RootState) => state.Listings);
+  const { Products, Variants } = useSelector((state: RootState) => state.Listings);
   const deviceWidth = Dimensions.get("window").width;
   const [drawer, setDrawer] = useState(false);
   const dispatch = useDispatch();
   const [index, setIndex] = React.useState<number>(0);
+  const [filteredVariants, setFilteredVariants] = useState<IVariantType[]>([]);
+
+  useEffect(() => {
+    setFilteredVariants(Variants.filter((item) => item.ProductId === product.id))
+  }, [Variants]);
+
 
   return (
     <Pressable
@@ -41,7 +47,7 @@ const ProductCard = ({
       <View className="flex">
         <View className="flex-row mx-1 mb-1 rounded-md bg-white p-1 justify-center items-center ">
           <View className="p-3">
-            {product.variantes.length === 1 ? (
+            {filteredVariants.length > 0 && filteredVariants.length === 1 ? (
               <View className="flex flex-row justify-between m-3">
                 <View>
                   <View className="space-y-1">
@@ -55,7 +61,7 @@ const ProductCard = ({
                       numberOfLines={2}
                       className=" font-semibold w-44 text-sm"
                     >
-                      {product.variantes[0].name}
+                      {filteredVariants[0].name}
                     </Text>
                   </View>
 
@@ -63,9 +69,9 @@ const ProductCard = ({
                     <View>
                       <View>
                         <Text className="font-semibold text-[16px]">
-                          ₹{product.variantes[0].discountedPrice}{" "}
+                          ₹{filteredVariants[0]?.discountedPrice}{" "}
                           <Text className="text-gray-400 line-through text-[14px]">
-                            ₹{product.variantes[0].originalPrice}
+                            ₹{filteredVariants[0]?.originalPrice}
                           </Text>
                         </Text>
                         <Text className="text-xs text-gray-500 w-40 mt-2">
@@ -91,7 +97,7 @@ const ProductCard = ({
                       {Boolean(
                         items.find(
                           (a) =>
-                            a.selectedVariant.id === product.variantes[0].id
+                            a.selectedVariant.id === filteredVariants[0].id
                         )
                       ) ? (
                         <View className="flex flex-row items-center p-1 gap-x-2  pr-3 bg-[#faf6f2]   border border-rose-500 rounded-lg">
@@ -99,11 +105,11 @@ const ProductCard = ({
                             onPress={() => {
                               const targetProduct = Products.find(
                                 (items) =>
-                                  items.id === product.variantes[0].ProductId
+                                  items.id === filteredVariants[0].ProductId
                               );
                               console.log(
                                 targetProduct,
-                                product.variantes[0].ProductId
+                                filteredVariants[0].ProductId
                               );
                               const copyProduct = { ...targetProduct };
                               delete copyProduct.variantes;
@@ -111,7 +117,7 @@ const ProductCard = ({
                                 removeItems({
                                   product: copyProduct,
                                   quantity: 1,
-                                  selectedVariant: product.variantes[0],
+                                  selectedVariant: filteredVariants[0],
                                 })
                               );
                             }}
@@ -127,7 +133,7 @@ const ProductCard = ({
                               items.find(
                                 (a) =>
                                   a.selectedVariant.id ===
-                                  product.variantes[0].id
+                                  filteredVariants[0].id
                               )?.quantity
                             }
                           </Text>
@@ -135,15 +141,15 @@ const ProductCard = ({
                             onPress={() => {
                               const targetProduct = Products.find(
                                 (items) =>
-                                  items.id === product.variantes[0].ProductId
+                                  items.id === filteredVariants[0].ProductId
                               );
                               const copyProduct = { ...targetProduct };
-                              delete copyProduct.variantes;
+                              delete copyProduct.variantes; // TODO: Remove this later
                               dispatch(
                                 addItems({
                                   product: copyProduct,
                                   quantity: 1,
-                                  selectedVariant: product.variantes[0],
+                                  selectedVariant: filteredVariants[0],
                                 })
                               );
                             }}
@@ -162,7 +168,7 @@ const ProductCard = ({
                           onPress={() => {
                             const targetProduct = Products.find(
                               (items) =>
-                                items.id === product.variantes[0].ProductId
+                                items.id === filteredVariants[0].ProductId
                             );
                             const copyProduct = { ...targetProduct };
                             delete copyProduct.variantes;
@@ -170,7 +176,7 @@ const ProductCard = ({
                               addItems({
                                 product: copyProduct,
                                 quantity: 1,
-                                selectedVariant: product.variantes[0],
+                                selectedVariant: filteredVariants[0],
                               })
                             );
                           }}
@@ -196,10 +202,10 @@ const ProductCard = ({
                   <Text className="font-semibold text-[12px] ">
                     Starting @{" "}
                     <Text className="text-[14px]">
-                      ₹{product.variantes[0].discountedPrice}{" "}
+                      ₹{filteredVariants[0]?.discountedPrice}{" "}
                     </Text>
                     <Text className="line-through text-gray-500">
-                      ₹{product.variantes[0].originalPrice}
+                      ₹{filteredVariants[0]?.originalPrice}
                     </Text>
                   </Text>
                   <Text className="text-xs text-gray-500 w-40 pt-[10px]">
@@ -229,7 +235,7 @@ const ProductCard = ({
                       }}
                     >
                       <Text className="font-semibold text-[#B9181DFF]">
-                        {product.variantes.length} Options
+                        {filteredVariants.length} Options
                       </Text>
                     </Button>
                   </View>
@@ -241,7 +247,7 @@ const ProductCard = ({
         <Drawer
           isOpen={drawer}
           children={
-            <VarientsCard variantes={product.variantes} setDrawer={setDrawer} />
+            <VarientsCard variantes={filteredVariants} setDrawer={setDrawer} />
           }
           onClose={() => setDrawer(false)}
           key={product.id}

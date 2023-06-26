@@ -2,7 +2,7 @@ import { View,Dimensions } from 'react-native'
 import React, { useEffect } from 'react'
 import { Firebase } from '../../../config'
 import { useDispatch, useSelector } from 'react-redux'
-import { IProductType, setCategory, setProducts } from '../../redux/ProductsSlice'
+import { IProductType, setCategory, setProducts, setVariants } from '../../redux/ProductsSlice'
 import Categorys from './Categorys'
 import { RootState } from '../../redux'
 import ProductCard from '../../components/ProductCard'
@@ -13,7 +13,7 @@ import { Divider } from 'native-base'
 
 const Home = () => {
     const dispatch = useDispatch()
-    const { Products } = useSelector((state: RootState) => state.Listings)
+    const { Products,Variants } = useSelector((state: RootState) => state.Listings)
     const deviceWidth = Dimensions.get("window").width;
 
     const navigate = useNavigation()
@@ -25,6 +25,10 @@ const Home = () => {
         Firebase.firestore().collection("Product").get()
             .then(res => {
                 dispatch(setProducts(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
+            })
+        Firebase.firestore().collection("Variant").get()
+            .then(res => {
+                dispatch(setVariants(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
             })
     }, [])
 
