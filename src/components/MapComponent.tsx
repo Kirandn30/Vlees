@@ -1,7 +1,7 @@
 import { Badge, Box, Button, CheckIcon, Divider, Drawer, FormControl, Icon, Input, Select, Text, VStack, View } from "native-base";
 import { Alert, StyleSheet } from "react-native";
 import Lottie from 'lottie-react-native';
-import MapView from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from '@expo/vector-icons';
 import { setLocation, setLocationCopy, setPlaceName } from "../redux/Mapslice";
 import { useDispatch, useSelector } from "react-redux";
@@ -91,6 +91,7 @@ export const MapComponent = () => {
                             minZoomLevel={18}
                             showsMyLocationButton
                             showsUserLocation
+                            provider={PROVIDER_GOOGLE}
                         />
                         <View style={styles.marker} >
                             <View className="w-28 bg-black m-auto px-1 py-2 rounded-lg absolute bottom-9 -right-10">

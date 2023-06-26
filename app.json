@@ -30,7 +30,12 @@
 				"backgroundColor": "#ffffff"
 			},
 			"package": "com.kirandn30.meatforyou",
-			"permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+			"permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+			"config": {
+				"googleMaps": {
+					"apiKey": "AIzaSyAQAen09Fg70paaU2FWaCL_t7DcJtMGXDU"
+				}
+			}
 		},
 		"web": {
 			"favicon": "./assets/favicon.png"
