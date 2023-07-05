@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { RootState } from '../../redux';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { findClosest, geoDistance } from '../../services/distance';
 
 interface LocationAutocompleteProps { }
 
@@ -167,11 +168,24 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                                     }
                                     const res = await addMessage(coordinates)
                                     if (res.data.name) {
-                                        dispatch(setPlaceName(res.data.name))
-                                        dispatch(setLocation({
-                                            latitude: latitude,
-                                            longitude: longitude
-                                        }))
+                                        const closestAddress  = findClosest(coordinates, addresses)
+                                    
+                                    console.log("closest Address",closestAddress); 
+
+                                    
+
+                                    const closestDistance = geoDistance(coordinates, closestAddress.location);
+                                    console.log("closest distance",closestDistance);
+                                    if(closestDistance <= 100){
+                                        dispatch(setPlaceName(closestAddress.addressName))
+                                        dispatch(setLocation(closestAddress.location))
+                                        
+                                    }
+                                    else{dispatch(setPlaceName("not granted"))
+                                    dispatch(setLocation({
+                                        latitude: latitude,
+                                        longitude: longitude
+                                    }))}
                                         //@ts-ignore
                                         navigation.navigate("Home")
                                     } else {

@@ -22,7 +22,7 @@ type Props = {
 }
 
 const Products: React.FC<Props> = ({ route }) => {
-    const { Products, Category, CategoryName } = useSelector((state: RootState) => state.Listings)
+    const { Products, Category, CategoryName, Variants } = useSelector((state: RootState) => state.Listings)
     const { items } = useSelector((state: RootState) => state.Cart)
     const [fliteredProducts, setFliteredProducts] = useState<any[]>([])
     const [isEmpty, setIsEmpty] = useState(false)
@@ -41,7 +41,12 @@ const Products: React.FC<Props> = ({ route }) => {
     }, [route.params])
 
     const renderItem = ({ item }: { item: IProductType }) => {
-        if (item.variantes.length > 0) {
+
+        const findVariants = () => {
+            return Variants.filter(variant => variant.ProductId === item.id)
+        }
+
+        if (findVariants().length > 0) {
             return (
                 <ProductCard product={item} key={item.id} navigate={navigate} />
             )

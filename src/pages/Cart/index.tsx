@@ -198,9 +198,10 @@ const Cart = () => {
 export default Cart
 
 
-const SelectedAddress = ({ navigate, setIsOpen }: {
+export const SelectedAddress = ({ navigate, setIsOpen, showSlot=true }: {
     navigate: NavigationProp<ReactNavigation.RootParamList>
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+    showSlot?: boolean
 
 }) => {
 
@@ -221,7 +222,7 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
                             if (!deliverable) return
                             dispatch(setPlaceName(item.addressName))
                             dispatch(setLocation(item.location))
-                            setSelectedAddress(item.addressName)
+                            setSelectedAddress(item)
                         }}>
                             <View className={!(item.addressName === selectedAddress) ? 'p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1' : 'p-3 py-1 border-solid border-[1px] border-gray-500 bg-red-50 rounded-lg space-y-1 my-1'}>
                                 {deliverable ? (<Text className='text-blue-500'>DELIVERS TO</Text>) : (<Text className='text-red-500'>DOES  NOT DELIVER TO</Text>)}
@@ -244,6 +245,7 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
                     <Text>Add New Address</Text>
                 </Button>
             </View>
+            {showSlot && 
             <View className='mt-5'>
                 <ButtonCompo
                     disable={false}
@@ -257,7 +259,7 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
                     loading={false}
                     text='Select Slot'
                 />
-            </View>
+            </View>}
         </View>
     )
 }

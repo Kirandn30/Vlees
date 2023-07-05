@@ -40,13 +40,15 @@ import { FetchLocation } from './components/FetchLocation'
 import ShowCartDetails from './components/ShowCartDetails'
 import GetHelpOrder from './components/GetHelpOrder'
 import Geolocation from '@react-native-community/geolocation';
+import { geoDistance, findClosest } from './services/distance'
+import { setStoreLocation } from './redux/ProductsSlice'
 
 
 const Pages = () => {
     const Stack = createStackNavigator();
     const { User, userDetails } = useSelector((state: RootState) => state.User)
     const { CategoryName } = useSelector((state: RootState) => state.Listings)
-    const { fetchinglocation, placeName } = useSelector((state: RootState) => state.Location)
+    const { fetchinglocation, placeName, location, addresses } = useSelector((state: RootState) => state.Location)
     const { getHelpOrderData } = useSelector((state: RootState) => state.Orders)
 
     const dispatch = useDispatch()
@@ -60,6 +62,8 @@ const Pages = () => {
                     .then((res) => {
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
                     })
+                
+        
             } else {
                 dispatch(setUser(null))
             }
@@ -124,19 +128,33 @@ const Pages = () => {
                         console.log("3");
                         addMessage(coordinates)
                             .then((res) => {
-                                if (res.data.name) {
-                                    dispatch(setPlaceName(res.data.name))
+                                if (res.data.name ) {
+                                    
+                                    const closestAddress  = findClosest(coordinates, addresses)
+                                    
+                                    console.log("closest Address",closestAddress); 
+
+                                    
+
+                                    const closestDistance = geoDistance(coordinates, closestAddress.location);
+                                    console.log("closest distance",closestDistance);
+                                    if(closestDistance <= 100){
+                                        dispatch(setPlaceName(closestAddress.addressName))
+                                        dispatch(setLocation(closestAddress.location))
+                                        
+                                    }
+                                    else{dispatch(setPlaceName("not granted"))
                                     dispatch(setLocation({
                                         latitude: latitude,
                                         longitude: longitude
-                                    }))
+                                    }))}
                                     console.log('4');
                                 } else {
                                     Alert.alert("Error fetching location try again")
                                 }
                             })
                             .catch((error) => {
-                                console.log(error);
+                                console.log("error",error);
 
                             })
                     })
@@ -153,9 +171,10 @@ const Pages = () => {
 
     if (fetchinglocation) {
         return (
-            <FetchLocation getLocFunc={getLocFunc} />
+            <View>{addresses.length>0 && <FetchLocation getLocFunc={getLocFunc} />}</View>
         )
-    } else {
+    }
+    else {
     if (User && userDetails) {
         return (
             <NavigationContainer ref={navigationRef}>

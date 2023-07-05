@@ -25,7 +25,7 @@ const initialState: MapsType = {
     addresses: [],
     locationCopy: null,
     placeNameCopy: null,
-    fetchinglocation: false
+    fetchinglocation: false,
 }
 
 const LocationSlice = createSlice({
@@ -51,9 +51,10 @@ const LocationSlice = createSlice({
             state.fetchinglocation = action.payload
         },
 
+
     },
 })
 
-export const { setLocation, setPlaceName, setAddresses, setLocationCopy, setPlaceNameCopy, setFetchingLocation } = LocationSlice.actions
+export const { setLocation, setPlaceName, setAddresses, setLocationCopy, setPlaceNameCopy, setFetchingLocation} = LocationSlice.actions
 
 export default LocationSlice.reducer
