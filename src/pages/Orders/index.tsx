@@ -6,13 +6,19 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux'
 import { } from "../../../config"
 import { setOrders } from '../../redux/orderSlice'
-import { Badge, Button, Pressable } from 'native-base'
+import { Badge, Button, Modal, Pressable, TextArea } from 'native-base'
 import { useNavigation } from '@react-navigation/native'
 import { ScrollView } from 'react-native-gesture-handler'
+import { Rating } from 'react-native-ratings'
+import { updateFeedback } from '../../services/orderService'
 
 const Orders = () => {
     const { User } = useSelector((state: RootState) => state.User)
     const { Orders } = useSelector((state: RootState) => state.Orders)
+    const [open,setOpen] = React.useState(false)
+    const [selectedOrder,setSelectedOrder] = React.useState<string|null>(null)
+    const [rating,setRating] = React.useState<number>(1)
+    const [feedback,setFeedback] = React.useState<string|undefined>(null)
     const navigate = useNavigation()
     const dispatch = useDispatch()
 
@@ -23,9 +29,55 @@ const Orders = () => {
         })
     }, [])
 
+    const handleSubmit = async () => {
+        const res = await updateFeedback(selectedOrder!,rating,feedback)
+        if(res === "success"){
+            setOpen(false)
+        }
+        else{
+            alert("Something went wrong")
+        }
+    }
+
+
     return (
         <ScrollView>
             <View className='my-5 space-y-3'>
+                <Modal isOpen={open} onClose={() => {setOpen(false)}} size="lg">
+                    <Modal.Content maxWidth="350px">
+                        <Modal.CloseButton />
+                        <Modal.Header>Rate Order</Modal.Header>
+                        <Modal.Body>
+                            <View className='flex-col p-5 justify-center items-center'>
+                            <View className='flex-row gap-5 mb-5'>
+                                        <Text>Rate the order</Text>
+                                        <Rating
+                                            type='custom'
+                                            ratingCount={5}
+                                            startingValue={rating}
+                                            minValue={0.5}
+                                            jumpValue={0.5}
+                                            fractions={2}
+                                            imageSize={20}
+                                            onFinishRating={(rating:number) => setRating(rating)}
+                                            />                                   
+                                    </View>
+                                    {/* @ts-ignore */}
+                                <TextArea className="w-full" value={feedback} placeholder="Write your review here" onChangeText={(text) => setFeedback(text)} />
+                                    
+                            </View>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button.Group variant="ghost" space={2}>
+                                <Button>Cancel</Button>
+                                <Button onPress={()=> {
+                                    handleSubmit()
+                                    }}>Submit</Button>
+                            </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
                 {Orders.map(order => (
                     //@ts-ignore
                     <Pressable onPress={() => navigate.navigate('OrderId', { orderId: order.id })}>
@@ -47,7 +99,12 @@ const Orders = () => {
                                 ))}
                             </View>
                             <View className='flex-row p-3 gap-5'>
-                                <Button size="xs" className='grow' variant="outline">
+                                <Button size="xs" className='grow' variant="outline" onPress={() =>{
+                                    setOpen(true)
+                                    setSelectedOrder(order.id)
+                                    setRating(order.rating)
+                                    setFeedback(order.feedback)
+                                }}>
                                     <Text className='text-red-400'>Rate Order</Text>
                                 </Button>
                                 <Button size="xs" className='grow' variant="outline">
