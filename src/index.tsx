@@ -58,6 +58,7 @@ const Pages = () => {
             if (user) {
                 dispatch(setUser(user))
                 dispatch(setPlaceName("fetch"))
+
                 Firebase.firestore().collection("Address").where("userId", "==", user.uid).get()
                     .then((res) => {
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
@@ -83,9 +84,11 @@ const Pages = () => {
         if (!User) return
         Firebase.firestore().collection("Users").doc(User.uid).get().then((response) => {
             if (response.exists) {
+                console.log("doc exists")
                 dispatch(setUserDetails(response.data()))
                 setLoading(false);
             } else {
+                console.log("doc not exists",fetchinglocation)
                 dispatch(setUserDetails(null))
                 setLoading(false);
             }
@@ -96,6 +99,7 @@ const Pages = () => {
 
 
     if (loading && !userDetails && User) {
+        console.log("loading")
         return (<View className='flex-1 justify-center items-center bg-white'>
             <Text className='text-xl font-semibold'>Loading......</Text>
         </View>);
@@ -135,19 +139,33 @@ const Pages = () => {
                                     console.log("closest Address",closestAddress); 
 
                                     
-
-                                    const closestDistance = geoDistance(coordinates, closestAddress.location);
-                                    console.log("closest distance",closestDistance);
-                                    if(closestDistance <= 100){
-                                        dispatch(setPlaceName(closestAddress.addressName))
-                                        dispatch(setLocation(closestAddress.location))
-                                        
+                                    if(closestAddress){
+                                        const closestDistance = geoDistance(coordinates, closestAddress.location);
+                                        console.log("closest distance",closestDistance);
+                                        if(closestDistance <= 100){
+                                            dispatch(setPlaceName(closestAddress.addressName))
+                                            dispatch(setLocation(closestAddress.location))
+                                            
+                                        }
+                                        else{
+                                            dispatch(setPlaceName("not granted"))
+                                            dispatch(
+                                                setLocation({
+                                                    latitude: latitude,
+                                                    longitude: longitude
+                                                })
+                                            )
+                                        }
                                     }
-                                    else{dispatch(setPlaceName("not granted"))
-                                    dispatch(setLocation({
-                                        latitude: latitude,
-                                        longitude: longitude
-                                    }))}
+                                    else{
+                                        dispatch(setPlaceName("not granted"))
+                                        dispatch(
+                                                setLocation({
+                                                latitude: latitude,
+                                                longitude: longitude
+                                            })
+                                        )
+                                    }
                                     console.log('4');
                                 } else {
                                     Alert.alert("Error fetching location try again")
@@ -171,7 +189,7 @@ const Pages = () => {
 
     if (fetchinglocation) {
         return (
-            <View>{addresses.length>0 && <FetchLocation getLocFunc={getLocFunc} />}</View>
+            <View>{<FetchLocation getLocFunc={getLocFunc} />}</View>
         )
     }
     else {

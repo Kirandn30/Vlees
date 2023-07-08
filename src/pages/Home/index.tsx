@@ -67,7 +67,7 @@ const Home = () => {
 
     useEffect(() => {
         console.log("storeLocation",storeLocation.length, placeName,location)
-        if(placeName!=="not granted" && storeLocation.length>0){
+        if(placeName!=="not granted" && placeName != "fetch" && storeLocation.length>0){
            // console.log(location)
             const closestStore = findClosest(location,storeLocation)
             console.log("closestStore",closestStore)

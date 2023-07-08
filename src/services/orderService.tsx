@@ -1,6 +1,6 @@
 import { Firebase } from "../../config";
 
-export const updateFeedback = async (id: string,rating:number, feedback: string|null ) => { 
+export const updateFeedback = async (id: string,rating:number, feedback: string|undefined ) => { 
     try {
         const doc = await Firebase.firestore().collection("Orders").doc(id).update({rating,feedback})
         

@@ -18,7 +18,7 @@ const Orders = () => {
     const [open,setOpen] = React.useState(false)
     const [selectedOrder,setSelectedOrder] = React.useState<string|null>(null)
     const [rating,setRating] = React.useState<number>(1)
-    const [feedback,setFeedback] = React.useState<string|undefined>(null)
+    const [feedback,setFeedback] = React.useState<string|undefined>(undefined)
     const navigate = useNavigation()
     const dispatch = useDispatch()
 
