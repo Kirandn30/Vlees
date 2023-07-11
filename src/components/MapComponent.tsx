@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import * as Yup from "yup"
 import { Formik } from "formik";
 import React from "react";
+import { clearCart } from "../redux/CartSlice";
 
 export const MapComponent = () => {
     const { locationCopy, placeName, location } = useSelector((state: RootState) => state.Location)
@@ -63,9 +64,12 @@ export const MapComponent = () => {
             placeName: currentAdress
         }).then(() => {
             setIsOpen(false)
+
             //@ts-ignore
             nativate.navigate('Home')
             dispatch(setPlaceName(values.addressName))
+            dispatch(setLocation(location))
+            dispatch(clearCart())
         }).finally(() => setLoading(false))
 
     };

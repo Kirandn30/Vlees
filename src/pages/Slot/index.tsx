@@ -10,6 +10,7 @@ import uuid from 'react-native-uuid';
 import { Firebase } from '../../../config';
 import { useNavigation, StackActions } from '@react-navigation/native';
 import { clearCart } from '../../redux/CartSlice';
+import { SelectedAddress } from '../Cart';
 
 
 const SlotBook = () => {
@@ -23,6 +24,7 @@ const SlotBook = () => {
     const navigate = useNavigation()
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
+    const [selectedAddress, setSelectedAddress] = useState(null)
 
 
     useEffect(() => {
@@ -56,7 +58,14 @@ const SlotBook = () => {
                 console.error("Error checking time:", error);
             }
         })()
+      
+        setSelectedAddress(addresses.find(item => item.addressName === placeName))
     }, [])
+
+    useEffect(() => {
+        console.log("add")
+        console.log("selectedAddress", selectedAddress);
+    }, [selectedAddress])
 
 
     if ((typeof isTimeGreaterTan3PM) === "string") {
@@ -147,6 +156,7 @@ const SlotBook = () => {
                                         name: userDetails.name,
                                         phone: userDetails.phoneNumber,
                                         email: userDetails.email,
+                                        address_id: selectedAddress.id,
                                         address_line_1: selectedAddress.houseFlatNo,
                                         address_line_2: selectedAddress.buildingName,
                                         lat: location?.latitude,
@@ -163,11 +173,7 @@ const SlotBook = () => {
                                         setTimeout(() => {
                                             //@ts-ignore
                                             navigate.navigate('OrderId', { orderId: OrderId })
-                                            dispatch(clearCart({
-                                                items: [],
-                                                total_items: 0,
-                                                total_price: 0
-                                            }))
+                                            dispatch(clearCart())
                                             setLoading(false)
                                         }, 2000)
                                     })

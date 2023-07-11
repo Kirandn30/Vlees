@@ -14,6 +14,7 @@ import { geoDistance, findClosest } from '../../services/distance'
 import { setLocation, setPlaceName } from '../../redux/Mapslice'
 import { SelectedAddress } from '../Cart'
 import { loadData } from '../../services/loadData'
+import { clearCart } from '../../redux/CartSlice'
 
 const Home = () => {
     const dispatch = useDispatch()
@@ -72,6 +73,7 @@ const Home = () => {
             const closestStore = findClosest(location,storeLocation)
             console.log("closestStore",closestStore)
             dispatch(setSelectedStore(closestStore))
+            dispatch(clearCart())
         }
 
 
@@ -87,6 +89,7 @@ const Home = () => {
             
         }
         else{
+            //dispatch(clearCart())
             setIsOpen(false)
         }
     },[placeName])

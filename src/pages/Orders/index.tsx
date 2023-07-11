@@ -84,7 +84,7 @@ const Orders = () => {
                         <View className='bg-white p-5 mx-3 rounded-lg' key={order.id}>
                             <View className='flex-row'>
                                 <View className='grow'>
-                                    <Text numberOfLines={1} className='font-medium w-48'>{order.items.map((item: any) => item.product.name).toString() + "dsfdsfdsfdssfdsff"}</Text>
+                                    <Text numberOfLines={1} className='font-medium w-48'>{order.items.map((item: any) => item.product.name).toString()}</Text>
                                 </View>
                                 <View>
                                     <Badge variant="solid">{order.status.toUpperCase()}</Badge>

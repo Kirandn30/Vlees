@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { debounce } from 'lodash';
 import { Firebase } from '../../../config';
-import { Divider, Icon, Input, Spinner } from 'native-base';
+import { Divider, Icon, Input, Spinner, AlertDialog, Button } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
 import { setAddresses, setLocation, setLocationCopy, setPlaceName } from '../../redux/Mapslice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { RootState } from '../../redux';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { findClosest, geoDistance } from '../../services/distance';
+import { clearCart } from '../../redux/CartSlice';
 
 interface LocationAutocompleteProps { }
 
@@ -29,7 +30,98 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch()
     const { User } = useSelector((state: RootState) => state.User)
-    const { addresses } = useSelector((state: RootState) => state.Location)
+    const { addresses, placeName } = useSelector((state: RootState) => state.Location)
+    const [isOpen,setIsOpen] = useState(false)
+    const [selectedAddress,setSelectedAddress] = useState<any>(null)
+    const onClose = () => setIsOpen(false);
+    const [type, setType] = useState<"new"|"prev"|"fetch">("prev")
+
+  const cancelRef = React.useRef(null);
+
+  const handleSubmit = async() => {
+    if (type === "prev") {
+    dispatch(setPlaceName(selectedAddress.addressName))
+    dispatch(setLocation(selectedAddress.location))
+    dispatch(clearCart())
+    onClose()
+    //@ts-ignore
+    navigation.navigate('Home')
+    }
+    else if (type === "fetch") {
+        onClose()
+        try {
+            setLoading(true)
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert(
+                    'Permission Denied',
+                    'Permission to access location was denied',
+                    [{ text: 'OK' }]
+                );
+                return;
+            }
+            let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+            const { latitude, longitude } = currentLocation.coords;
+            const addMessage = Firebase.functions().httpsCallable('addMessage');
+            const coordinates = {
+                latitude,
+                longitude
+            }
+            const res = await addMessage(coordinates)
+            if (res.data.name) {
+                const closestAddress  = findClosest(coordinates, addresses)
+            
+            console.log("closest Address",closestAddress); 
+
+            
+
+            const closestDistance = geoDistance(coordinates, closestAddress.location);
+            console.log("closest distance",closestDistance);
+            if(closestDistance <= 100){
+                dispatch(setPlaceName(closestAddress.addressName))
+                dispatch(setLocation(closestAddress.location))
+                
+            }
+            else{dispatch(setPlaceName("not granted"))
+            dispatch(setLocation({
+                latitude: latitude,
+                longitude: longitude
+            }))}
+            
+                //@ts-ignore
+                navigation.navigate("Home")
+            } else {
+                Alert.alert("Error fetching location try again")
+            }
+        } catch (error) {
+            Alert.alert("Error getting location try again")
+        } finally {
+            setLoading(false)
+        }
+    }
+    else{
+        try {
+            onClose()
+            setLoading(true)
+            setLoadingItem(selectedAddress.description)
+            const response = await getLongAndLat({ placeId: selectedAddress.placeId });
+            dispatch(setLocationCopy({
+                latitude: response.data.latitude,
+                longitude: response.data.longitude,
+            }))
+            //@ts-ignore
+            navigation.navigate("Location Information")
+        } catch (error) {
+            Alert.alert("Error")
+            console.log(error);
+
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    }
+
 
     const handleQueryChange = (text: string) => {
         setQuery(text);
@@ -64,10 +156,19 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     const renderAddressSuggestion = (item: any) => {
         return (
             <Pressable onPress={() => {
-                dispatch(setPlaceName(item.addressName))
-                dispatch(setLocation(item.location))
+                setType("prev")
+                if(placeName!=item.addressName){
+                    setSelectedAddress(item)
+                    setIsOpen(true)
+                }
+                else{
+                    //@ts-ignore
+                    navigation.navigate('Home')
+                }
+                //dispatch(setPlaceName(item.addressName))
+                //dispatch(setLocation(item.location))
                 //@ts-ignore
-                navigation.navigate('Home')
+                //
             }}>
                 <View className='p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1'>
                     <Text className='text-lg font-semibold '>{item.addressName}</Text>
@@ -82,7 +183,10 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
             <Pressable
                 disabled={loading}
                 onPress={async () => {
-                    try {
+                    setType("new")
+                    setSelectedAddress(item)
+                    setIsOpen(true)
+                    /* try {
                         setLoading(true)
                         setLoadingItem(item.description)
                         const response = await getLongAndLat({ placeId: item.placeId });
@@ -98,7 +202,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
 
                     } finally {
                         setLoading(false)
-                    }
+                    } */
                 }}>
                 <View className='bg-white rounded-lg mb-2 border-solid border-[1px] border-gray-300 shadow-md h-14'>
                     <View className='p-2 w-full flex flex-row gap-2'>
@@ -120,6 +224,26 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
 
     return (
         <View style={styles.container} className='h-screen'>
+            <AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onClose}>
+                <AlertDialog.Content>
+                    <AlertDialog.CloseButton />
+                    <AlertDialog.Header>Warning: Address Change Will Empty Cart</AlertDialog.Header>
+                    <AlertDialog.Body>
+                        Please note that changing your address will result in a change of outlet, which will empty your cart. To proceed, click the "Confirm" button.
+                    </AlertDialog.Body>
+                    <AlertDialog.Footer>
+                        <Button.Group space={2}>
+                        <Button variant="unstyled" colorScheme="coolGray" onPress={onClose} ref={cancelRef}>
+                            Cancel
+                        </Button>
+                        <Button colorScheme="danger" onPress={handleSubmit}>
+                            Continue
+                        </Button>
+                        </Button.Group>
+                    </AlertDialog.Footer>
+                </AlertDialog.Content>
+            </AlertDialog>
+
             <Input
                 value={queryy}
                 onChangeText={handleQueryChange}
@@ -148,7 +272,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                         <Pressable
                             disabled={loading}
                             onPress={async () => {
-                                try {
+                                setType("fetch")
+                                setIsOpen(true)
+                                /* try {
                                     setLoading(true)
                                     let { status } = await Location.requestForegroundPermissionsAsync();
                                     if (status !== 'granted') {
@@ -195,7 +321,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                                     Alert.alert("Error getting location try again")
                                 } finally {
                                     setLoading(false)
-                                }
+                                } */
                             }}>
                             <View className='flex flex-row gap-3'>
                                 <Icon
