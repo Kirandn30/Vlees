@@ -4,10 +4,10 @@
 		"slug": "meat-for-you",
 		"version": "1.0.0",
 		"orientation": "portrait",
-		"icon": "./assets/icon.png",
+		"icon": "./assets/vlees.png",
 		"userInterfaceStyle": "light",
 		"splash": {
-			"image": "./assets/splash.png",
+			"image": "./assets/vlees.png",
 			"resizeMode": "contain",
 			"backgroundColor": "#ffffff"
 		},
@@ -26,7 +26,7 @@
 		},
 		"android": {
 			"adaptiveIcon": {
-				"foregroundImage": "./assets/adaptive-icon.png",
+				"foregroundImage": "./assets/vlees.png",
 				"backgroundColor": "#ffffff"
 			},
 			"package": "com.kirandn30.meatforyou",
@@ -38,7 +38,7 @@
 			}
 		},
 		"web": {
-			"favicon": "./assets/favicon.png"
+			"favicon": "./assets/vlees.png"
 		},
 		"extra": {
 			"eas": {

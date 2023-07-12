@@ -1,18 +1,18 @@
 import { AnyAction, Dispatch } from "@reduxjs/toolkit"
 import { db } from "../../config"
 import { IProductType, setCategory, setProducts, setVariants, setStoreLocation, setSelectedStore } from '../redux/ProductsSlice'
-import { collection, getDocs, query, where } from "firebase/firestore"
+import { collection, getDocs, query, where, and } from "firebase/firestore"
 
 
 export const loadData = async (locationId:string|null = null, dispatch:Dispatch<AnyAction>)=>{
     console.log("locationId")
-    const storeLocation = await getDocs(collection(db,"Location"))
+    const storeLocation = await getDocs(query(collection(db,"Location"), where("active","==",true)))
     //Firebase.firestore().collection("Location").get()
     dispatch(setStoreLocation(storeLocation.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
 
     if(locationId){
     console.log("locationId",locationId)
-    const variants = await getDocs(query(collection(db,"Variant"),where("locationId","==",locationId)))
+    const variants = await getDocs(query(collection(db,"Variant"),and(where("locationId","==",locationId), where("is_active","==",true))))
     //Firebase.firestore().collection("Variant").where("locationId","==",locationId).get()
     dispatch(setVariants(variants.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
 
