@@ -12,9 +12,10 @@ import { addItems, removeItems } from '../../redux/CartSlice';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonCompo from '../../components/button';
 import { collection, onSnapshot, query, serverTimestamp, where } from "firebase/firestore";
-import { Firebase } from '../../../config';
+import { db, func } from '../../../config';
 import { setAddresses, setLocation, setPlaceName } from '../../redux/Mapslice';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { httpsCallable } from 'firebase/functions';
 
 const Cart = () => {
     const { items, total_items, total_price } = useSelector((state: RootState) => state.Cart)
@@ -25,7 +26,7 @@ const Cart = () => {
     const [savings, setSavings] = useState(0)
     const deviceHeight = Dimensions.get("window").height;
     const dispatch = useDispatch()
-    const getOrderId = Firebase.functions().httpsCallable('getOrderId');
+    const getOrderId = httpsCallable(func,'getOrderId');
     const navigate = useNavigation()
 
 
@@ -40,7 +41,7 @@ const Cart = () => {
 
     useEffect(() => {
         if (!User) return
-        const unsub = onSnapshot(query(collection(Firebase.firestore(), "Address"), where("userId", "==", User.uid)), (snap) => {
+        const unsub = onSnapshot(query(collection(db, "Address"), where("userId", "==", User.uid)), (snap) => {
             dispatch(setAddresses(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
         })
         return () => unsub()

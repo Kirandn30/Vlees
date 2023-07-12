@@ -7,7 +7,7 @@ import { setLocation, setLocationCopy, setPlaceName } from "../redux/Mapslice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux";
 import { useEffect, useRef, useState } from "react";
-import { Firebase } from "../../config";
+import { func,db } from "../../config";
 import ButtonCompo from "./button";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +16,8 @@ import * as Yup from "yup"
 import { Formik } from "formik";
 import React from "react";
 import { clearCart } from "../redux/CartSlice";
+import { addDoc, collection } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 
 export const MapComponent = () => {
     const { locationCopy, placeName, location } = useSelector((state: RootState) => state.Location)
@@ -37,7 +39,7 @@ export const MapComponent = () => {
     useEffect(() => {
         (async () => {
             if (!locationCopy) return
-            const addMessage = Firebase.functions().httpsCallable('addMessage');
+            const addMessage = httpsCallable(func,'addMessage');
             const coordinates = {
                 latitude: locationCopy.latitude,
                 longitude: locationCopy.longitude
@@ -56,8 +58,8 @@ export const MapComponent = () => {
         if (!User) return
         setLoading(true)
         console.log(location);
-
-        Firebase.firestore().collection("Address").add({
+        addDoc(collection(db,"Address"),
+        /* Firebase.firestore().collection("Address").add( */{
             ...values,
             userId: User.uid,
             location: location,

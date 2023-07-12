@@ -7,7 +7,7 @@ import { Divider, Icon, Image } from 'native-base';
 import { FontAwesome5 } from '@expo/vector-icons';
 import Lottie from 'lottie-react-native';
 import { getDoc } from 'firebase/firestore';
-import { Firebase } from '../../../config';
+import { db } from '../../../config';
 import { setGetHelpOrderId } from '../../redux/orderSlice';
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import ButtonCompo from '../../components/button';
@@ -35,7 +35,8 @@ const SingleOrder: React.FC<Props> = ({ route }) => {
             dispatch(setGetHelpOrderId(data))
         } else {
             //@ts-ignore
-            Firebase.firestore().collection("Orders").doc(route.params.orderId).get().then((res) => {
+            getDoc(doc(db,"Orders", route.params.orderId))
+            /* Firebase.firestore().collection("Orders").doc(route.params.orderId).get() */.then((res) => {
                 setOrder(res.data())
                 dispatch(setGetHelpOrderId(res.data()))
             })
@@ -78,14 +79,68 @@ const SingleOrder: React.FC<Props> = ({ route }) => {
                 </View>
             </View>
             <View className='flex-row justify-center bg-white py-5'>
-                {["created", "payment completed"].includes(order.status) && <Lottie source={require('../../../assets/confirmed.json')} autoPlay loop style={{ height: 100 }} />}
-                {["dispatched", "delivery partner assigned"].includes(order.status) && <Lottie source={require('../../../assets/out-for-delivery.json')} autoPlay loop style={{ height: 100 }} />}
-                {["completed"].includes(order.status) && <Lottie source={require('../../../assets/delivered.json')} autoPlay loop style={{ height: 100 }} />}
+                {["created", "payment completed"].includes(order.status) && <Lottie source={require('../../../assets/confirmed.json')} autoPlay loop style={{ height: 80 }} />}
+                {["dispatched", "delivery partner assigned"].includes(order.status) && <Lottie source={require('../../../assets/out-for-delivery.json')} autoPlay loop style={{ height: 80 }} />}
+                {["completed"].includes(order.status) && <Lottie source={require('../../../assets/delivered.json')} autoPlay loop style={{ height: 80 }} />}
             </View>
             <View className='space-y-3 p-3'>
                 <Text className='font-medium text-lg text-center'>Order Details</Text>
                 <ScrollView className='h-96'>
                     {order.items.map((item: any) => (
+                        <View key={item.selectedVariant.id} className='bg-white rounded-lg'>
+                            <View className='flex flex-row gap-3 my-1'>
+                                <Image source={{ uri: item.product.image_url[0] }} alt={item.product.name} className='h-20 w-20 rounded-lg' />
+                                <View className='space-y-1'>
+                                    <Text className='font-bold'>{item.product.name} x {item.quantity}</Text>
+                                    <Text className='font-semibold text-xs'>{item.selectedVariant.name}</Text>
+                                    <Text className='text-xs'>{item.selectedVariant.weight}{item.selectedVariant.unit}</Text>
+                                    <Text className='font-bold'>₹{item.selectedVariant.discountedPrice * item.quantity}</Text>
+                                </View>
+                            </View>
+                            <View>
+                                <View className='flex-row items-center'>
+                                    <Text className='px-2 py1'>Rate :</Text>
+                                    <RatingComponent />
+                                </View>
+                            </View>
+                        </View>
+                    ))}{order.items.map((item: any) => (
+                        <View key={item.selectedVariant.id} className='bg-white rounded-lg'>
+                            <View className='flex flex-row gap-3 my-1'>
+                                <Image source={{ uri: item.product.image_url[0] }} alt={item.product.name} className='h-20 w-20 rounded-lg' />
+                                <View className='space-y-1'>
+                                    <Text className='font-bold'>{item.product.name} x {item.quantity}</Text>
+                                    <Text className='font-semibold text-xs'>{item.selectedVariant.name}</Text>
+                                    <Text className='text-xs'>{item.selectedVariant.weight}{item.selectedVariant.unit}</Text>
+                                    <Text className='font-bold'>₹{item.selectedVariant.discountedPrice * item.quantity}</Text>
+                                </View>
+                            </View>
+                            <View>
+                                <View className='flex-row items-center'>
+                                    <Text className='px-2 py1'>Rate :</Text>
+                                    <RatingComponent />
+                                </View>
+                            </View>
+                        </View>
+                    ))}{order.items.map((item: any) => (
+                        <View key={item.selectedVariant.id} className='bg-white rounded-lg'>
+                            <View className='flex flex-row gap-3 my-1'>
+                                <Image source={{ uri: item.product.image_url[0] }} alt={item.product.name} className='h-20 w-20 rounded-lg' />
+                                <View className='space-y-1'>
+                                    <Text className='font-bold'>{item.product.name} x {item.quantity}</Text>
+                                    <Text className='font-semibold text-xs'>{item.selectedVariant.name}</Text>
+                                    <Text className='text-xs'>{item.selectedVariant.weight}{item.selectedVariant.unit}</Text>
+                                    <Text className='font-bold'>₹{item.selectedVariant.discountedPrice * item.quantity}</Text>
+                                </View>
+                            </View>
+                            <View>
+                                <View className='flex-row items-center'>
+                                    <Text className='px-2 py1'>Rate :</Text>
+                                    <RatingComponent />
+                                </View>
+                            </View>
+                        </View>
+                    ))}{order.items.map((item: any) => (
                         <View key={item.selectedVariant.id} className='bg-white rounded-lg'>
                             <View className='flex flex-row gap-3 my-1'>
                                 <Image source={{ uri: item.product.image_url[0] }} alt={item.product.name} className='h-20 w-20 rounded-lg' />

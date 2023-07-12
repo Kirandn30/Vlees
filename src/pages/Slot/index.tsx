@@ -1,13 +1,13 @@
 import { View, Text, Pressable } from 'react-native'
 import React, { useState, useEffect } from 'react'
-import { Timestamp, serverTimestamp } from 'firebase/firestore'
+import { Timestamp, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { ScrollView } from 'react-native-gesture-handler';
 import { Button, Divider } from 'native-base';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux';
 import ButtonCompo from '../../components/button';
 import uuid from 'react-native-uuid';
-import { Firebase } from '../../../config';
+import { db } from '../../../config';
 import { useNavigation, StackActions } from '@react-navigation/native';
 import { clearCart } from '../../redux/CartSlice';
 import { SelectedAddress } from '../Cart';
@@ -168,7 +168,8 @@ const SlotBook = () => {
                                     UserId: User.uid
                                 }
                                 // @ts-ignore
-                                Firebase.firestore().collection("Orders").doc(OrderId).set(Order)
+                                setDoc(doc(db, "Orders", OrderId), Order)
+                                /* Firebase.firestore().collection("Orders").doc(OrderId).set(Order) */
                                     .then(() => {
                                         setTimeout(() => {
                                             //@ts-ignore

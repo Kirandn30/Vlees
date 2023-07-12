@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native'
 import React, { useEffect } from 'react'
-import { Firebase } from '../../../config'
+import { db } from '../../../config'
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux'
@@ -24,7 +24,7 @@ const Orders = () => {
 
     useEffect(() => {
         if (!User) return
-        onSnapshot(query(collection(Firebase.firestore(), "Orders"), where("UserId", "==", User.uid), orderBy("date_created", "desc")), (snap) => {
+        onSnapshot(query(collection(db, "Orders"), where("UserId", "==", User.uid), orderBy("date_created", "desc")), (snap) => {
             dispatch(setOrders(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
         })
     }, [])

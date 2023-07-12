@@ -1,7 +1,6 @@
 import { View, Text, Dimensions } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { RouteProp, useNavigation, } from '@react-navigation/native';
-import { Firebase } from '../../config';
 import { setCategoryName, setProducts } from '../redux/ProductsSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux';

@@ -34,7 +34,7 @@ import { TransitionSpecs } from '@react-navigation/stack';
 import ProductPage from './components/ProductPage'
 import * as IntentLauncher from 'expo-intent-launcher';
 import { getCurrentPositionAsync, Accuracy, requestForegroundPermissionsAsync } from 'expo-location';
-import { Firebase } from '../config';
+import { db,auth,func } from '../config';
 import { setLocation, setPlaceName } from './redux/Mapslice';
 import { FetchLocation } from './components/FetchLocation'
 import ShowCartDetails from './components/ShowCartDetails'
@@ -42,6 +42,9 @@ import GetHelpOrder from './components/GetHelpOrder'
 import Geolocation from '@react-native-community/geolocation';
 import { geoDistance, findClosest } from './services/distance'
 import { setStoreLocation } from './redux/ProductsSlice'
+import { onAuthStateChanged, signOut } from 'firebase/auth/react-native'
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
 
 
 const Pages = () => {
@@ -54,20 +57,24 @@ const Pages = () => {
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const unsub = Firebase.auth().onAuthStateChanged((user) => {
+        
+        const unsub = onAuthStateChanged(auth,(user) => {
+            
             if (user) {
                 dispatch(setUser(user))
                 dispatch(setPlaceName("fetch"))
-
-                Firebase.firestore().collection("Address").where("userId", "==", user.uid).get()
+                getDocs(query(collection(db,"Address"), where("userId", "==", user.uid)))
                     .then((res) => {
+
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
-                    })
+                    }).catch((err) =>console.log("err",err))
                 
-        
+                    
             } else {
                 dispatch(setUser(null))
             }
+
+            console.log("a")
         })
         return () => unsub();
     }, [])
@@ -78,12 +85,15 @@ const Pages = () => {
         } else {
             dispatch(setFetchingLocation(false))
         }
+        
     }, [placeName])
 
     useEffect(() => {
         if (!User) return
-        Firebase.firestore().collection("Users").doc(User.uid).get().then((response) => {
-            if (response.exists) {
+        //console.log(User.id)
+        getDoc(doc(db,"Users",User.uid)).then((response) => {
+            console.log("b")
+            if (response.exists()) {
                 console.log("doc exists")
                 dispatch(setUserDetails(response.data()))
                 setLoading(false);
@@ -93,7 +103,7 @@ const Pages = () => {
                 setLoading(false);
             }
         }).catch((error) => {
-            console.log(error);
+            console.log("err1",error);
         })
     }, [User])
 
@@ -124,7 +134,7 @@ const Pages = () => {
                 })
                     .then((currentLocation) => {
                         const { latitude, longitude } = currentLocation.coords;
-                        const addMessage = Firebase.functions().httpsCallable('addMessage');
+                        const addMessage = httpsCallable(func,'addMessage');
                         const coordinates = {
                             latitude,
                             longitude
@@ -352,7 +362,7 @@ const Pages = () => {
                         //@ts-ignore
                         component={Profile}
                         options={{
-                            headerRight: () => (<Button variant="unstyled" onPress={() => Firebase.auth().signOut()}>
+                            headerRight: () => (<Button variant="unstyled" onPress={() => signOut(auth)}>
                                 <Text className='text-red-600'>Logout</Text>
                             </Button>),
                             headerLeft: () => (<GoBack />),

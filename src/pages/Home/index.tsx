@@ -1,6 +1,5 @@
 import { View,Dimensions } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { Firebase } from '../../../config'
 import { useDispatch, useSelector } from 'react-redux'
 import { IProductType, setCategory, setProducts, setVariants, setStoreLocation, setSelectedStore } from '../../redux/ProductsSlice'
 import Categorys from './Categorys'
@@ -112,7 +111,7 @@ const Home = () => {
     }
     return (
         <View className='bg-gray-50 min-h-screen'>
-            {isOpen?<SelectedAddress navigate={navigate} showSlot={false} setIsOpen={setIsOpen} />:
+            {isOpen||!placeName || placeName==="not granted"?<SelectedAddress navigate={navigate} showSlot={false} setIsOpen={setIsOpen} />:
             <ScrollView >
                 <SearchBar />
                 <Categorys />

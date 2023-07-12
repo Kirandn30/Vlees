@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Box, ScrollView, VStack, View,KeyboardAvoidingView} from 'native-base';
-import { Alert,} from "react-native"
+import { Alert, Platform,} from "react-native"
 import UserDeatilsHeader from './UserDeatilsHeader';
 import ProfileForm from './FormDeatils';
-import { Firebase } from '../../../config';
+import { auth,storage, db } from '../../../config';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux';
 import { setUser, setUserDetails } from '../../redux/UserSlice';
 import React from 'react';
+import { signOut } from 'firebase/auth/react-native';
+import {ref, getDownloadURL, uploadBytes } from 'firebase/storage'
+import { doc, setDoc } from 'firebase/firestore';
 
 const UserDetails = () => {
     const { User, userDetails } = useSelector((state: RootState) => state.User)
@@ -16,7 +19,7 @@ const UserDetails = () => {
     const [loading, setLoading] = useState(false)
 
     const handleRightButtonPress = () => {
-        Firebase.auth().signOut().then(() => {
+        signOut(auth).then(() => {
             dispatch(setUser(null))
         })
     };
@@ -25,16 +28,21 @@ const UserDetails = () => {
             if (image.uri && User) {
                 setLoading(true)
                 const response = await fetch(image.uri);
+                console.log(response)
                 const blob = await response.blob();
+                console.log("blob",blob)
                 // Use `firebase.storage()` instead of `Firebase.storage()`
-                const ref = Firebase.storage().ref().child(`images/${new Date().getTime()}`);
+                console.log("location0",`images/${new Date().getTime()}`)
+                const storageref = ref(storage,`images/${new Date().getTime()}`);
+                console.log("storage ref: " + storageref)
 
                 // Use `await` instead of `.then()` to simplify the code and handle errors
-                await ref.put(blob);
-                const downloadURL = await ref.getDownloadURL();
+                await uploadBytes(storageref,blob);
+                const downloadURL = await getDownloadURL(storageref);
                 // You can now save the download URL to your database or use it to display the image
                 // ...
-                Firebase.firestore().collection("Users").doc(User.uid).set({
+                setDoc(doc(db,"Users",User.uid),/* )
+                Firebase.firestore().collection("Users").doc(User.uid).set( */{
                     ...formData,
                     photoUrl: downloadURL,
                     userId: User.uid

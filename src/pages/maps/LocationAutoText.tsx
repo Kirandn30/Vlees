@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { debounce } from 'lodash';
-import { Firebase } from '../../../config';
+import { db,func } from '../../../config';
 import { Divider, Icon, Input, Spinner, AlertDialog, Button } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
 import { setAddresses, setLocation, setLocationCopy, setPlaceName } from '../../redux/Mapslice';
@@ -15,12 +15,13 @@ import { RootState } from '../../redux';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { findClosest, geoDistance } from '../../services/distance';
 import { clearCart } from '../../redux/CartSlice';
+import { httpsCallable } from 'firebase/functions';
 
 interface LocationAutocompleteProps { }
 
 
-const getLocationSuggestions = Firebase.functions().httpsCallable('getLocationSuggestions');
-const getLongAndLat = Firebase.functions().httpsCallable('getLongAndLat');
+const getLocationSuggestions = httpsCallable(func,'getLocationSuggestions');
+const getLongAndLat = httpsCallable(func,'getLongAndLat');
 
 const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     const [queryy, setQuery] = useState('');
@@ -62,31 +63,42 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
             }
             let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
             const { latitude, longitude } = currentLocation.coords;
-            const addMessage = Firebase.functions().httpsCallable('addMessage');
+            const addMessage = httpsCallable(func,'addMessage');
             const coordinates = {
                 latitude,
                 longitude
             }
             const res = await addMessage(coordinates)
+            console.log("res",res)
             if (res.data.name) {
-                const closestAddress  = findClosest(coordinates, addresses)
-            
-            console.log("closest Address",closestAddress); 
+                if(addresses.length > 0){
+                    const closestAddress  = findClosest(coordinates, addresses)
+                    console.log("closest Address",closestAddress); 
+                    const closestDistance = geoDistance(coordinates, closestAddress.location);
+                    console.log("closest distance",closestDistance);
+                    if(closestDistance <= 100){
+                        dispatch(setPlaceName(closestAddress.addressName))
+                        dispatch(setLocation(closestAddress.location))
+                        
+                    }
+                    else{
+                        dispatch(setPlaceName("not granted"))
+                        dispatch(setLocation({
+                            latitude: latitude,
+                            longitude: longitude
+                        }))
+                    }
 
-            
+                    
+                }
+                else{
+                    dispatch(setPlaceName("not granted"))
+                    dispatch(setLocation({
+                        latitude: latitude,
+                        longitude: longitude
+                    }))
 
-            const closestDistance = geoDistance(coordinates, closestAddress.location);
-            console.log("closest distance",closestDistance);
-            if(closestDistance <= 100){
-                dispatch(setPlaceName(closestAddress.addressName))
-                dispatch(setLocation(closestAddress.location))
-                
-            }
-            else{dispatch(setPlaceName("not granted"))
-            dispatch(setLocation({
-                latitude: latitude,
-                longitude: longitude
-            }))}
+                }
             
                 //@ts-ignore
                 navigation.navigate("Home")
@@ -94,6 +106,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                 Alert.alert("Error fetching location try again")
             }
         } catch (error) {
+            console.log("err",error)
             Alert.alert("Error getting location try again")
         } finally {
             setLoading(false)
@@ -129,7 +142,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
 
     useEffect(() => {
         if (!User) return
-        const unsub = onSnapshot(query(collection(Firebase.firestore(), "Address"), where("userId", "==", User.uid)), (snap) => {
+        const unsub = onSnapshot(query(collection(db, "Address"), where("userId", "==", User.uid)), (snap) => {
             dispatch(setAddresses(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
         })
         return () => unsub()
@@ -287,7 +300,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                                     }
                                     let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
                                     const { latitude, longitude } = currentLocation.coords;
-                                    const addMessage = Firebase.functions().httpsCallable('addMessage');
+                                    const addMessage = httpsCallable(func,'addMessage');
                                     const coordinates = {
                                         latitude,
                                         longitude
