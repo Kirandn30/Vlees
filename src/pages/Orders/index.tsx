@@ -107,9 +107,9 @@ const Orders = () => {
                                 }}>
                                     <Text className='text-red-400'>Rate Order</Text>
                                 </Button>
-                                <Button size="xs" className='grow' variant="outline">
+                                {/* <Button size="xs" className='grow' variant="outline">
                                     <Text className='text-red-400'>Re-Order</Text>
-                                </Button>
+                                </Button> */}
                             </View>
                         </View>
                     </Pressable>

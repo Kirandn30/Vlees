@@ -1,25 +1,35 @@
-import { View, Text, StyleSheet } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet,TouchableOpacity } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { Button, Divider, Icon, Input } from 'native-base'
 import { AntDesign } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux';
 import { FlatList } from 'react-native-gesture-handler';
+import { setFilter } from '../redux/ProductsSlice';
 
 
 const SearchBar = () => {
 
     const [filteredData, setFilteredData] = useState<IProductType[]>([])
-    const { Products } = useSelector((state: RootState) => state.Listings)
+    const { Products,filter } = useSelector((state: RootState) => state.Listings)
+    const [open, setOpen] = useState(false)
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+      console.log("dipatch",filter)
+    }, [filter])
+    
 
     const renderSuggestion = (items: IProductType) => (
+        <TouchableOpacity onPress={() => dispatch(setFilter(items.name))}>
         <View className=' rounded-xl'>
             <View className='p-3'>
                 <Text>{items.name}</Text>
             </View>
             <Divider className='bg-gray-200' />
         </View>
+        </TouchableOpacity>
     )
 
     return (
@@ -31,16 +41,27 @@ const SearchBar = () => {
                     InputLeftElement={<Icon as={<AntDesign name="search1" size={24} color="black" />} className='text-gray-400 ml-3' />}
                     backgroundColor="#F3F4F6FF"
                     borderColor="white"
-                    onChange={(e) => {
-                        const data = filterProducts(Products, e.nativeEvent.text)
-                        if (e.nativeEvent.text) {
+                    value={filter || ''}
+                    onChangeText={(e) => {
+                        setOpen(true)
+                        const data = filterProducts(Products, e)
+                        dispatch(setFilter(e))
+                        if (e) {
                             setFilteredData(data);
                         } else {
                             setFilteredData([])
                         }
                     }}
+
+                    onBlur={() => setOpen(false)}
+
+                    rightElement={ filter ? 
+                        <Button style={{backgroundColor:'transparent'}} onPress={() => dispatch(setFilter(null))}>
+                    <Icon as={<Ionicons name="close" size={24} color="black" />} className='text-gray-400' /> 
+                    </Button>
+                    :undefined    }
                 />
-                {filteredData.length > 0 && <View style={styles.suggestionsContainer} className='z-50'>
+                {open && filteredData.length > 0 && <View style={styles.suggestionsContainer} className='z-50'>
                     <FlatList
                         keyboardShouldPersistTaps='always' //open keyboard
                         data={filteredData}

@@ -3,6 +3,10 @@ import { db } from "../../config";
 
 export const updateFeedback = async (id: string,rating:number, feedback: string|undefined ) => { 
     try {
+        console.log("feedback: " + feedback);
+        if(!feedback){
+            feedback = ""
+        }
         const docs = await updateDoc(doc(db,"Orders",id),{rating,feedback})
         //Firebase.firestore().collection("Orders").doc(id).update({rating,feedback})
         

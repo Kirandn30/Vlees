@@ -9,6 +9,7 @@ interface ListingTypesType {
     CategoryName: string,
     storeLocation: IStoreLocationType[],
     selectedStore: IStoreLocationType|null,
+    filter: string|null
 }
 
 const initialState: ListingTypesType = {
@@ -17,7 +18,8 @@ const initialState: ListingTypesType = {
     Variants: [],
     CategoryName: '',
     storeLocation: [],
-    selectedStore:null
+    selectedStore:null,
+    filter: null
 }
 
 const ListingSlice = createSlice({
@@ -42,11 +44,14 @@ const ListingSlice = createSlice({
         setSelectedStore: (state, action) => {
             state.selectedStore = action.payload
         },
+        setFilter: (state, action) => {
+            state.filter = action.payload
+        }
 
     }
 })
 
-export const { setCategory, setProducts, setVariants, setCategoryName, setStoreLocation, setSelectedStore } = ListingSlice.actions
+export const { setCategory, setProducts, setVariants, setCategoryName, setStoreLocation, setSelectedStore,setFilter } = ListingSlice.actions
 
 export default ListingSlice.reducer
 

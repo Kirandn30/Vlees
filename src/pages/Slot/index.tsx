@@ -167,7 +167,6 @@ const SlotBook = () => {
                                     date_created: serverTimestamp(),
                                     UserId: User.uid
                                 }
-                                // @ts-ignore
                                 setDoc(doc(db, "Orders", OrderId), Order)
                                 /* Firebase.firestore().collection("Orders").doc(OrderId).set(Order) */
                                     .then(() => {

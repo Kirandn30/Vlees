@@ -142,7 +142,7 @@ const Cart = () => {
                             color="black"
                         />
                         <Text className='text-lg font-semibold'>
-                            Review Items
+                            List of Items
                         </Text>
                     </View>
                     <FlatList

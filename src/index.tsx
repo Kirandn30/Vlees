@@ -65,7 +65,6 @@ const Pages = () => {
                 dispatch(setPlaceName("fetch"))
                 getDocs(query(collection(db,"Address"), where("userId", "==", user.uid)))
                     .then((res) => {
-
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
                     }).catch((err) =>console.log("err",err))
                 
@@ -74,7 +73,6 @@ const Pages = () => {
                 dispatch(setUser(null))
             }
 
-            console.log("a")
         })
         return () => unsub();
     }, [])
@@ -146,13 +144,14 @@ const Pages = () => {
                                     
                                     const closestAddress  = findClosest(coordinates, addresses)
                                     
-                                    console.log("closest Address",closestAddress); 
+                                    //console.log("closest Address",closestAddress); 
 
                                     
                                     if(closestAddress){
                                         const closestDistance = geoDistance(coordinates, closestAddress.location);
-                                        console.log("closest distance",closestDistance);
+                                        //console.log("closest distance",closestDistance);
                                         if(closestDistance <= 100){
+                                            //console.log("closest address",closestAddress.addressName)
                                             dispatch(setPlaceName(closestAddress.addressName))
                                             dispatch(setLocation(closestAddress.location))
                                             
@@ -196,6 +195,7 @@ const Pages = () => {
             })
     }
 
+    
 
     if (fetchinglocation) {
         return (

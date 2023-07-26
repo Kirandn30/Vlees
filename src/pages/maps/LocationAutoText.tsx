@@ -250,7 +250,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                             Cancel
                         </Button>
                         <Button colorScheme="danger" onPress={handleSubmit}>
-                            Continue
+                            Confirm
                         </Button>
                         </Button.Group>
                     </AlertDialog.Footer>

@@ -50,11 +50,13 @@ const PhoneAuth = () => {
                 const credential = PhoneAuthProvider.credential(verificationId, code)
                 await signInWithCredential(auth,credential)
                 setCode(null)
+                console.log("okay")
                 setLoading(false)
             } else {
                 setValidOTP(true)
             }
         } catch (error: any) {
+            console.log(error)
             setLoading(false)
             setValidOTP(true)
         }
