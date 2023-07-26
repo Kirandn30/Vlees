@@ -43,7 +43,7 @@ const ProfileForm = ({
     onSave, setImage, image, loading }: any) => {
 
     const { userDetails } = useSelector((state: RootState) => state.User)
-
+        console.log("x",setImage)
     return (
         <ScrollView >
             

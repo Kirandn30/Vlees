@@ -196,6 +196,7 @@ const Pages = () => {
     }
 
     
+    
 
     if (fetchinglocation) {
         return (

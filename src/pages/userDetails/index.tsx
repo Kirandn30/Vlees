@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, ScrollView, VStack, View,KeyboardAvoidingView} from 'native-base';
 import { Alert, Platform,} from "react-native"
 import UserDeatilsHeader from './UserDeatilsHeader';
@@ -12,52 +12,58 @@ import { signOut } from 'firebase/auth/react-native';
 import {ref, getDownloadURL, uploadBytes } from 'firebase/storage'
 import { doc, setDoc } from 'firebase/firestore';
 
-const UserDetails = () => {
+const UserDetails = ({log=true,img = null}) => {
     const { User, userDetails } = useSelector((state: RootState) => state.User)
-    const [image, setImage] = useState<{ error: boolean, uri: null | string }>({ error: false, uri: null });
+    const [image, setImage] = useState<{ error: boolean, uri: null | string }>(img || { error: false, uri: null });
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
 
     const handleRightButtonPress = () => {
+        console.log()
         signOut(auth).then(() => {
             dispatch(setUser(null))
         })
     };
+
+    useEffect(() => {
+        console.log("image4",img)
+        setImage(img || { error: false, uri: null })
+    }, [img])
+
     const handleSave = async (formData: any) => {
         try {
-            if (image.uri && User) {
-                setLoading(true)
+            if (User) {
+                let data = { ...formData, userId: User.uid }
+                if (image.uri){
+                    setLoading(true)
                 const response = await fetch(image.uri);
                 console.log(response)
                 const blob = await response.blob();
                 console.log("blob",blob)
-                // Use `firebase.storage()` instead of `Firebase.storage()`
                 console.log("location0",`images/${new Date().getTime()}`)
                 const storageref = ref(storage,`images/${new Date().getTime()}`);
                 console.log("storage ref: " + storageref)
 
-                // Use `await` instead of `.then()` to simplify the code and handle errors
                 await uploadBytes(storageref,blob);
                 const downloadURL = await getDownloadURL(storageref);
-                // You can now save the download URL to your database or use it to display the image
-                // ...
-                setDoc(doc(db,"Users",User.uid),/* )
-                Firebase.firestore().collection("Users").doc(User.uid).set( */{
-                    ...formData,
-                    photoUrl: downloadURL,
-                    userId: User.uid
-                }).then(() => {
-                    dispatch(setUserDetails({
+                    data = {...data,photoUrl:downloadURL}
+                    console.log("data1",{
                         ...formData,
                         photoUrl: downloadURL,
                         userId: User.uid
-                    }))
+                    })
+                    /*  */
+
+                }
+                setDoc(doc(db,"Users",User.uid),data).then(() => {
+                    dispatch(setUserDetails(data))
                 }).catch((error) => {
                     console.log(error);
 
                 })
+                console.log("data",data)
             } else {
-                setImage(prev => ({ ...prev, error: true }));
+                setImage(prev => ({ ...prev, error: false }));
             }
         } catch (error) {
             console.log("this error", error);
@@ -66,13 +72,12 @@ const UserDetails = () => {
         }
     };
 
-
     return (
         <View className='flex-1'>
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}  keyboardVerticalOffset={50} >
-            <UserDeatilsHeader title="My Profile" onRightButtonPress={handleRightButtonPress} />
+            {log && <UserDeatilsHeader title="My Profile" onRightButtonPress={handleRightButtonPress} />}
             
-            <ScrollView className='bg-white h-screen'>
+            <ScrollView className={`bg-white ${log && "h-screen"}`}>
                         <ProfileForm onSave={handleSave} setImage={setImage} image={image} loading={loading} />
             </ScrollView>
             </KeyboardAvoidingView>

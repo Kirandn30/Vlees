@@ -19,17 +19,25 @@ export default function RoundImageButton({ setImage, image }: any) {
             aspect: [1, 1],
             quality: 1,
         });
+        
         if (!result.canceled) {
+            console.log("func",setImage)
             setImage({ uri: result.assets[0].uri, error: false });
+            console.log("set Image");
+            
         }
     };
+
+    useEffect(()=>{
+        console.log("imagexxx",image)
+    },[])
 
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             {
                 !image.uri ? (
-                    <View>
-                        <Button onPress={pickImage} variant="unstyled" className='p-5 bg-white rounded-full'>
+                    <View  className='bg-black h-[100px] w-[100px] rounded-full border-solid border-[10px] border-white relative flex justify-center items-center' >
+                        <Button onPress={pickImage} variant="unstyled" className='p-6  bg-white rounded-full'>
                             <Icon size={30} as={<Feather name="user" color="black" />} />
                         </Button>
                         {image.error && < Text className='text-xs text-red-500'>Image is requried</Text>}
@@ -42,7 +50,7 @@ export default function RoundImageButton({ setImage, image }: any) {
                             className='rounded-full'
                             alt=''
                         />
-                        <IconButton className='absolute -right-5 bg-white rounded-full'>
+                        <IconButton onPress={pickImage} className='absolute -right-5 bg-white rounded-full'>
                             <Icon size={6} as={<Entypo name="pencil" color="black" />} />
                         </IconButton>
                     </View>

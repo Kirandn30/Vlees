@@ -22,8 +22,11 @@ const PhoneAuth = () => {
     const dispatch = useDispatch()
 
     const sendVerificationCode = async () => {
+        
         try {
+
             if (!phoneNumber || !recaptchaVerifier.current) return
+            console.log("x")
             if (isValidIndianPhoneNumber(phoneNumber)) {
                 setLoading(true)
                 const phoneProvider = new PhoneAuthProvider(auth)
@@ -56,7 +59,7 @@ const PhoneAuth = () => {
                 setValidOTP(true)
             }
         } catch (error: any) {
-            console.log(error)
+            console.log(error,"x")
             setLoading(false)
             setValidOTP(true)
         }
