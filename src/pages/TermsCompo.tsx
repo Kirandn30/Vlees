@@ -14,7 +14,7 @@ const TermsCompo = () => {
                         size={22} color="white"
                     />
                 </View>
-                <Text className='font-semibold text-2xl ml-3'>PrivacyPolicy</Text>
+                <Text className='font-semibold text-2xl ml-3'>Terms and Conditions</Text>
             </View>
             <Divider className='w-10/12 m-auto' />
             <ScrollView>

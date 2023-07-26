@@ -15,7 +15,7 @@ const PrivacyPolicy = () => {
                         size={22} color="white"
                     />
                 </View>
-                <Text className='font-semibold text-2xl ml-3'>Terms and Condition</Text>
+                <Text className='font-semibold text-2xl ml-3'>Privacy Policy</Text>
             </View>
             <Divider className='w-10/12 m-auto' />
             <View className='p-3'>

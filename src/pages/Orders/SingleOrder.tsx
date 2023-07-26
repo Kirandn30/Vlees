@@ -110,7 +110,6 @@ const SingleOrder: React.FC<Props> = ({ route }) => {
                         text='Chat With Us'
                         handelClick={() => Linking.openURL(`whatsapp://send?text=Hello Vlees team,&phone=+918971892050`)}
                     />
-                    <Text className='text-center'>Share your valuable feedback with us</Text>
                 </View>
             </View>
         </View>

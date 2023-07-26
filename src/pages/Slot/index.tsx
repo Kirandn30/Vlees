@@ -132,11 +132,10 @@ const SlotBook = () => {
                 <View className='grow'>
                 </View>
                 <Divider />
-                <View className='mb-20 flex-row justify-between px-5 items-center pt-3'>
-                    <Text className='text-lg font-bold'>Total : ₹ {total_price + total_price * 0.05}</Text>
+                <View className='mb-20 px-5 pt-3'>
                     <View className='self-stretch'>
                         <Button
-                            className='bg-black w-24'
+                            className='bg-black w-full'
                             onPress={async () => {
                                 if (!User) return
                                 if (items.length === 0) return

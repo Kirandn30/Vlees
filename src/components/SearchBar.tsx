@@ -14,6 +14,7 @@ const SearchBar = () => {
     const [filteredData, setFilteredData] = useState<IProductType[]>([])
     const { Products,filter } = useSelector((state: RootState) => state.Listings)
     const [open, setOpen] = useState(false)
+    const [open2, setOpen2] = useState(false)
     const dispatch = useDispatch()
 
     useEffect(() => {
@@ -22,7 +23,14 @@ const SearchBar = () => {
     
 
     const renderSuggestion = (items: IProductType) => (
-        <TouchableOpacity onPress={() => dispatch(setFilter(items.name))}>
+        <TouchableOpacity onPress={() => {
+            console.log("items",items)
+            dispatch(setFilter(items.name))
+            setOpen2(false)
+            }}
+            onBlur={() => setOpen2(false)}
+            onFocus={() => setOpen2(true)}
+            >
         <View className=' rounded-xl'>
             <View className='p-3'>
                 <Text>{items.name}</Text>
@@ -34,7 +42,7 @@ const SearchBar = () => {
 
     return (
         <View className='p-3 flex-row gap-3'>
-            <View className='grow relative'>
+            <View className='grow relative' >
                 <Input
                     placeholder='Search'
                     className='placeholder:text-lg font-semibold h-10'
@@ -44,6 +52,7 @@ const SearchBar = () => {
                     value={filter || ''}
                     onChangeText={(e) => {
                         setOpen(true)
+                        setOpen2(true)
                         const data = filterProducts(Products, e)
                         dispatch(setFilter(e))
                         if (e) {
@@ -53,7 +62,7 @@ const SearchBar = () => {
                         }
                     }}
 
-                    onBlur={() => setOpen(false)}
+                    onBlur={() => {setOpen(false)}}
 
                     rightElement={ filter ? 
                         <Button style={{backgroundColor:'transparent'}} onPress={() => dispatch(setFilter(null))}>
@@ -61,12 +70,13 @@ const SearchBar = () => {
                     </Button>
                     :undefined    }
                 />
-                {open && filteredData.length > 0 && <View style={styles.suggestionsContainer} className='z-50'>
+                {(open || open2) && filteredData.length > 0 && <View style={styles.suggestionsContainer} className='z-50'>
                     <FlatList
                         keyboardShouldPersistTaps='always' //open keyboard
                         data={filteredData}
                         renderItem={({ item }) => renderSuggestion(item)}
                         keyExtractor={(item) => item.id}
+                        
                     />
                 </View>}
             </View>
