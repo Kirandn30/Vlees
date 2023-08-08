@@ -1,4 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { db } from '../../config'
+import { deleteDoc, doc } from 'firebase/firestore'
 
 interface MapsType {
     location: {
@@ -50,11 +52,29 @@ const LocationSlice = createSlice({
         setFetchingLocation: (state, action) => {
             state.fetchinglocation = action.payload
         },
+        updateAddress: (state, action) => {
+            const id = action.payload.id
+            const index = state.addresses.findIndex((address) => address.id === id)
+            if (state.addresses[index].addressName === state.placeName){
+                state.placeName = action.payload.addressName
+            }
+            state.addresses[index] = action.payload
+        },
+        deleteAddress: (state, action) => {
+            const id = action.payload.id
+            if(state.placeName === action.payload.addressName){
+                state.placeName = "not granted"
+            }
+            const index = state.addresses.findIndex((address) => address.id === id)
+            state.addresses.splice(index, 1)
+          
+
+        }
 
 
     },
 })
 
-export const { setLocation, setPlaceName, setAddresses, setLocationCopy, setPlaceNameCopy, setFetchingLocation} = LocationSlice.actions
+export const { setLocation, setPlaceName, setAddresses, setLocationCopy, setPlaceNameCopy, setFetchingLocation, updateAddress, deleteAddress} = LocationSlice.actions
 
 export default LocationSlice.reducer

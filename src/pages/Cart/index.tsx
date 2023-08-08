@@ -33,7 +33,7 @@ const Cart = () => {
     useEffect(() => {
         const totalPrice = items.reduce((accumulator, currentItem) => {
             const { quantity, selectedVariant } = currentItem;
-            const itemPrice = quantity * selectedVariant.originalPrice - selectedVariant.discountedPrice;
+            const itemPrice = quantity * (selectedVariant.originalPrice - selectedVariant.discountedPrice);
             return accumulator + itemPrice;
         }, 0);
         setSavings(totalPrice)

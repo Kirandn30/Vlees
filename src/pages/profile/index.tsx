@@ -11,7 +11,7 @@ import MoreDetails from './MoreDetails'
 const Profile = () => {
     const [seleted, setSeleted] = useState<"details" | "more">("details")
     const { userDetails } = useSelector((state: RootState) => state.User)
-    const [image, setImage] = useState<{ error: boolean, uri: null | string }>({ error: false, uri: null });
+    const [image, setImage] = useState<{ error: boolean, uri: null | string }>(userDetails?.photoUrl||{ error: false, uri: null });
     const [uploaded, setUploaded] = useState(false)
 
     const handleImage = (x:{ error: boolean, uri: null | string }) => {
@@ -23,7 +23,7 @@ const Profile = () => {
     return (
         <View className='flex-1'>
             <View className='mt-16'></View>
-            {!userDetails.photoUrl||!image.uri?<HStack h="1" className='flex justify-center items-center'>
+            {userDetails.photoUrl||image.uri?<HStack h="1" className='flex justify-center items-center'>
                                     <View>
                                         <RoundImageButton image={{ uri: uploaded?image.uri:userDetails.photoUrl }} setImage={handleImage}  />
                                     </View>
@@ -42,9 +42,12 @@ const Profile = () => {
                     </Button>
                 </View>
             </View>
+            {seleted === "details" ?<View className='bg-white pb-3 h-[75%]'>
+                <UserDetails log={false} img={image} /> 
+            </View>:
             <ScrollView pagingEnabled className='bg-white pb-3 h-screen'>
-                {seleted === "details" ? <UserDetails log={false} img={image} /> : <MoreDetails />}
-            </ScrollView>
+                 <MoreDetails />
+            </ScrollView>}
         </View>
     )
 }

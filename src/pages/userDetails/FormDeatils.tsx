@@ -43,7 +43,7 @@ const ProfileForm = ({
     onSave, setImage, image, loading }: any) => {
 
     const { userDetails } = useSelector((state: RootState) => state.User)
-        console.log("x",setImage)
+       // console.log("x",setImage,image)
     return (
         <ScrollView >
             
@@ -58,6 +58,7 @@ const ProfileForm = ({
                         city: userDetails ? userDetails.city : '',
                         state: userDetails ? userDetails.state : '',
                         gstNumber: userDetails ? userDetails.gstNumber : '',
+                        photoUrl: userDetails ? userDetails.photoUrl : '',
                     }}
                     validationSchema={validationSchema}
                     onSubmit={onSave}

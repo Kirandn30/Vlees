@@ -56,6 +56,11 @@ const Pages = () => {
 
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        console.log("addresses",addresses.length)
+    },[addresses])
+
     useEffect(() => {
         
         const unsub = onAuthStateChanged(auth,(user) => {
@@ -144,14 +149,14 @@ const Pages = () => {
                                     
                                     const closestAddress  = findClosest(coordinates, addresses)
                                     
-                                    //console.log("closest Address",closestAddress); 
+                                    console.log("closest Address",closestAddress,addresses); 
 
                                     
                                     if(closestAddress){
                                         const closestDistance = geoDistance(coordinates, closestAddress.location);
-                                        //console.log("closest distance",closestDistance);
+                                        console.log("closest distance",closestDistance,coordinates);
                                         if(closestDistance <= 100){
-                                            //console.log("closest address",closestAddress.addressName)
+                                            console.log("closest address",closestAddress)
                                             dispatch(setPlaceName(closestAddress.addressName))
                                             dispatch(setLocation(closestAddress.location))
                                             
@@ -181,7 +186,7 @@ const Pages = () => {
                                 }
                             })
                             .catch((error) => {
-                                console.log("error",error);
+                                console.log("error1",error);
 
                             })
                     })
@@ -199,6 +204,11 @@ const Pages = () => {
     
 
     if (fetchinglocation) {
+        if (!addresses.length) {
+            return (<View className='flex-1 justify-center items-center bg-white'>
+                <Text className='text-xl font-semibold'>Loading......</Text>
+            </View>);
+        }
         return (
             <View>{<FetchLocation getLocFunc={getLocFunc} />}</View>
         )

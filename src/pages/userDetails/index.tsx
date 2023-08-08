@@ -14,7 +14,8 @@ import { doc, setDoc } from 'firebase/firestore';
 
 const UserDetails = ({log=true,img = null}) => {
     const { User, userDetails } = useSelector((state: RootState) => state.User)
-    const [image, setImage] = useState<{ error: boolean, uri: null | string }>(img || { error: false, uri: null });
+    const [image, setImage] = useState<{ error: boolean, uri: null | string }>(img || userDetails?.photoUrl|| { error: false, uri: null });
+    console.log("image4",img, userDetails?.photoUrl,image)
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
 
@@ -26,16 +27,22 @@ const UserDetails = ({log=true,img = null}) => {
     };
 
     useEffect(() => {
-        console.log("image4",img)
+        //console.log("image4",log)
+    }, [log])
+    useEffect(() => {
+        //console.log("image4",img, userDetails?.photoUrl,image)
         setImage(img || { error: false, uri: null })
     }, [img])
 
     const handleSave = async (formData: any) => {
+        console.log(formData)
         try {
+            setLoading(true)
             if (User) {
                 let data = { ...formData, userId: User.uid }
-                if (image.uri){
-                    setLoading(true)
+                
+                if (image.uri && image.uri != userDetails.photoUrl ){
+                    
                 const response = await fetch(image.uri);
                 console.log(response)
                 const blob = await response.blob();
@@ -77,7 +84,7 @@ const UserDetails = ({log=true,img = null}) => {
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}  keyboardVerticalOffset={50} >
             {log && <UserDeatilsHeader title="My Profile" onRightButtonPress={handleRightButtonPress} />}
             
-            <ScrollView className={`bg-white ${log && "h-screen"}`}>
+            <ScrollView className={`bg-white ${log? "h-screen":"h-[25%]"}`}>
                         <ProfileForm onSave={handleSave} setImage={setImage} image={image} loading={loading} />
             </ScrollView>
             </KeyboardAvoidingView>

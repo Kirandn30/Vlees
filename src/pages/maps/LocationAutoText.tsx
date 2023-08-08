@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, SafeAreaView, ScrollView, Pressable, Alert } from 'react-native';
 import { debounce } from 'lodash';
 import { db,func } from '../../../config';
-import { Divider, Icon, Input, Spinner, AlertDialog, Button } from 'native-base';
+import { Divider, Icon, Input, Spinner, AlertDialog, Button, IconButton, Drawer } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
-import { setAddresses, setLocation, setLocationCopy, setPlaceName } from '../../redux/Mapslice';
+import { setAddresses, setLocation, setLocationCopy, setPlaceName, updateAddress } from '../../redux/Mapslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
@@ -12,10 +12,11 @@ import { Entypo } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { RootState } from '../../redux';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { findClosest, geoDistance } from '../../services/distance';
 import { clearCart } from '../../redux/CartSlice';
 import { httpsCallable } from 'firebase/functions';
+import { Form, FormValues } from '../../components/MapComponent'
 
 interface LocationAutocompleteProps { }
 
@@ -36,6 +37,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
     const [selectedAddress,setSelectedAddress] = useState<any>(null)
     const onClose = () => setIsOpen(false);
     const [type, setType] = useState<"new"|"prev"|"fetch">("prev")
+    const [openEdit, setOpenEdit] = useState(false)
 
   const cancelRef = React.useRef(null);
 
@@ -135,6 +137,19 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
 
     }
 
+    const handleSubmitEdit = (values: FormValues) => {
+        console.log(values)
+        if (!User) return
+        setLoading(true)
+        updateDoc(doc(db,"Address",selectedAddress.id),{
+            ...selectedAddress,...values
+        }).finally(() => {
+            dispatch(updateAddress({...selectedAddress,...values}))
+            setLoading(false)
+            setOpenEdit(false)
+        })
+
+    }
 
     const handleQueryChange = (text: string) => {
         setQuery(text);
@@ -183,10 +198,20 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                 //@ts-ignore
                 //
             }}>
-                <View className='p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1'>
-                    <Text className='text-lg font-semibold '>{item.addressName}</Text>
-                    <Text>{item.placeName}</Text>
+                <View className='p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-x-1 items-center bg-white my-1 flex flex-row'>
+                    <View className='w-[80%]'>
+                        <Text className='text-lg font-semibold '>{item.addressName}</Text>
+                        <Text>{item.placeName}</Text>
+                    </View>
+                    <View>
+                        <IconButton onPress={() => {
+                        console.log("delete")
+                        setSelectedAddress(item)
+                        setOpenEdit(true)
+                    }} icon={<Icon as={<AntDesign name="edit" size={24} color="black" />} />} />
+                    </View>
                 </View>
+                
             </Pressable>
         )
     }
@@ -287,54 +312,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                             onPress={async () => {
                                 setType("fetch")
                                 setIsOpen(true)
-                                /* try {
-                                    setLoading(true)
-                                    let { status } = await Location.requestForegroundPermissionsAsync();
-                                    if (status !== 'granted') {
-                                        Alert.alert(
-                                            'Permission Denied',
-                                            'Permission to access location was denied',
-                                            [{ text: 'OK' }]
-                                        );
-                                        return;
-                                    }
-                                    let currentLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
-                                    const { latitude, longitude } = currentLocation.coords;
-                                    const addMessage = httpsCallable(func,'addMessage');
-                                    const coordinates = {
-                                        latitude,
-                                        longitude
-                                    }
-                                    const res = await addMessage(coordinates)
-                                    if (res.data.name) {
-                                        const closestAddress  = findClosest(coordinates, addresses)
-                                    
-                                    console.log("closest Address",closestAddress); 
-
-                                    
-
-                                    const closestDistance = geoDistance(coordinates, closestAddress.location);
-                                    console.log("closest distance",closestDistance);
-                                    if(closestDistance <= 100){
-                                        dispatch(setPlaceName(closestAddress.addressName))
-                                        dispatch(setLocation(closestAddress.location))
-                                        
-                                    }
-                                    else{dispatch(setPlaceName("not granted"))
-                                    dispatch(setLocation({
-                                        latitude: latitude,
-                                        longitude: longitude
-                                    }))}
-                                        //@ts-ignore
-                                        navigation.navigate("Home")
-                                    } else {
-                                        Alert.alert("Error fetching location try again")
-                                    }
-                                } catch (error) {
-                                    Alert.alert("Error getting location try again")
-                                } finally {
-                                    setLoading(false)
-                                } */
+                               
                             }}>
                             <View className='flex flex-row gap-3'>
                                 <Icon
@@ -360,6 +338,18 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = () => {
                     </View>
                 )
             }
+            <Drawer
+                    children={<Form
+                        currentAdress={selectedAddress}
+                        handleSubmit={handleSubmitEdit}
+                        loading={loading}
+                    />}
+                    onClose={() => {
+                        setSelectedAddress(null)
+                        setOpenEdit(false)}}
+                    placement="bottom"
+                    isOpen={openEdit}
+                />
         </View>
     );
 };

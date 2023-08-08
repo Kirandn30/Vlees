@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
 });
 
 
-const Form = ({ currentAdress, handleSubmit, loading }: {
-    currentAdress: string | null
+export const Form = ({ currentAdress, handleSubmit, loading }: {
+    currentAdress: string | any |null
     handleSubmit: (values: FormValues) => void
     loading: boolean
 }) => {
@@ -169,11 +169,11 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
     return (
         <View>
             <View className="py-2 flex flex-row gap-1 bg-gray-100 px-3">
-                <Text className="w-4/5 font-semibold">{currentAdress}</Text>
+                <Text className="w-4/5 font-semibold">{typeof currentAdress == 'string'?currentAdress:currentAdress.placeName}</Text>
                 <Badge className="rounded-3xl bg-gray-200 self-center">Change</Badge>
             </View>
             <View className="bg-white p-3">
-                <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={validationSchema}>
+                <Formik initialValues={typeof currentAdress == 'string'?initialValues:currentAdress} onSubmit={handleSubmit} validationSchema={validationSchema}>
                     {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
                         <Box>
                             <VStack space={1} width="90%" mx="auto">
@@ -239,7 +239,7 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
                                 </FormControl>
                                 <View className="mt-3">
                                     <ButtonCompo
-                                        loading={loading} text={"Add address"} disable={loading} handelClick={handleSubmit} />
+                                        loading={loading} text={typeof currentAdress == 'string'?"Add address":"update Address"} disable={loading} handelClick={handleSubmit} />
                                 </View>
                             </VStack>
                         </Box>
@@ -251,7 +251,7 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
 };
 
 
-type FormValues = {
+export type FormValues = {
     houseFlatNo: string;
     // floorNumber: string;
     buildingName: string;
