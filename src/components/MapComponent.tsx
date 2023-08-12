@@ -7,7 +7,7 @@ import { setLocation, setLocationCopy, setPlaceName } from "../redux/Mapslice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux";
 import { useEffect, useRef, useState } from "react";
-import { Firebase } from "../../config";
+import { func,db } from "../../config";
 import ButtonCompo from "./button";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,6 +15,9 @@ import * as Location from 'expo-location';
 import * as Yup from "yup"
 import { Formik } from "formik";
 import React from "react";
+import { clearCart } from "../redux/CartSlice";
+import { addDoc, collection } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 
 export const MapComponent = () => {
     const { locationCopy, placeName, location } = useSelector((state: RootState) => state.Location)
@@ -36,7 +39,7 @@ export const MapComponent = () => {
     useEffect(() => {
         (async () => {
             if (!locationCopy) return
-            const addMessage = Firebase.functions().httpsCallable('addMessage');
+            const addMessage = httpsCallable(func,'addMessage');
             const coordinates = {
                 latitude: locationCopy.latitude,
                 longitude: locationCopy.longitude
@@ -55,17 +58,20 @@ export const MapComponent = () => {
         if (!User) return
         setLoading(true)
         console.log(location);
-
-        Firebase.firestore().collection("Address").add({
+        addDoc(collection(db,"Address"),
+        /* Firebase.firestore().collection("Address").add( */{
             ...values,
             userId: User.uid,
             location: location,
             placeName: currentAdress
         }).then(() => {
             setIsOpen(false)
+
             //@ts-ignore
             nativate.navigate('Home')
             dispatch(setPlaceName(values.addressName))
+            dispatch(setLocation(location))
+            dispatch(clearCart())
         }).finally(() => setLoading(false))
 
     };
@@ -154,8 +160,8 @@ const styles = StyleSheet.create({
 });
 
 
-const Form = ({ currentAdress, handleSubmit, loading }: {
-    currentAdress: string | null
+export const Form = ({ currentAdress, handleSubmit, loading }: {
+    currentAdress: string | any |null
     handleSubmit: (values: FormValues) => void
     loading: boolean
 }) => {
@@ -163,11 +169,11 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
     return (
         <View>
             <View className="py-2 flex flex-row gap-1 bg-gray-100 px-3">
-                <Text className="w-4/5 font-semibold">{currentAdress}</Text>
+                <Text className="w-4/5 font-semibold">{typeof currentAdress == 'string'?currentAdress:currentAdress.placeName}</Text>
                 <Badge className="rounded-3xl bg-gray-200 self-center">Change</Badge>
             </View>
             <View className="bg-white p-3">
-                <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={validationSchema}>
+                <Formik initialValues={typeof currentAdress == 'string'?initialValues:currentAdress} onSubmit={handleSubmit} validationSchema={validationSchema}>
                     {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
                         <Box>
                             <VStack space={1} width="90%" mx="auto">
@@ -233,7 +239,7 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
                                 </FormControl>
                                 <View className="mt-3">
                                     <ButtonCompo
-                                        loading={loading} text={"Add address"} disable={loading} handelClick={handleSubmit} />
+                                        loading={loading} text={typeof currentAdress == 'string'?"Add address":"update Address"} disable={loading} handelClick={handleSubmit} />
                                 </View>
                             </VStack>
                         </Box>
@@ -245,7 +251,7 @@ const Form = ({ currentAdress, handleSubmit, loading }: {
 };
 
 
-type FormValues = {
+export type FormValues = {
     houseFlatNo: string;
     // floorNumber: string;
     buildingName: string;

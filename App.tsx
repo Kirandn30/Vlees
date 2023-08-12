@@ -1,23 +1,18 @@
 import 'react-native-gesture-handler';
-import React, { useState } from 'react';
-import { Button, Text, View, DeviceEventEmitter, Platform, TouchableWithoutFeedback } from 'react-native';
-import FirebaseOTP from './src/pages/Auth';
-import { Firebase } from './config';
+import React from 'react';
 import { NativeBaseProvider, StatusBar, extendTheme } from 'native-base';
-import UserDetails from './src/pages/userDetails';
 import { Provider } from 'react-redux';
-import { RootState, store } from './src/redux';
-import { useSelector, useDispatch } from 'react-redux'
-import { setUser } from './src/redux/UserSlice';
+import { store } from './src/redux';
 import Pages from './src';
-import { Keyboard } from 'react-native'
 import { SafeAreaView } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
 export default function App() {
   return (
     <Provider store={store}>
       <NativeBaseProvider theme={theme}>
+        <AutocompleteDropdownContextProvider>
         <StatusBar
           animated={true}
           backgroundColor="#000000"
@@ -27,6 +22,7 @@ export default function App() {
             <Pages />
           </SafeAreaView>
         </SafeAreaProvider>
+        </AutocompleteDropdownContextProvider>
       </NativeBaseProvider>
     </Provider>
   );

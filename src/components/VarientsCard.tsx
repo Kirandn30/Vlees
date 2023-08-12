@@ -18,6 +18,8 @@ const VarientsCard = ({ variantes, setDrawer }: {
     const [total, setTotal] = useState(0)
 
     useEffect(() => {
+        console.log("cart",items)
+        console.log("variantes",variantes)
         const filteredProducts = items.filter((item => item.product.id === variantes[0].ProductId))
         if (filteredProducts.length > 0) {
             const totalPrice = filteredProducts.reduce((accumulator, currentItem) => {

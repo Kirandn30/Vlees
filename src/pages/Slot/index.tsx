@@ -1,62 +1,72 @@
 import { View, Text, Pressable } from 'react-native'
-import React, { useState, useEffect } from 'react'
-import { Timestamp, serverTimestamp } from 'firebase/firestore'
+import React, { useState, useEffect, useRef } from 'react'
+import { Timestamp, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { ScrollView } from 'react-native-gesture-handler';
-import { Button, Divider } from 'native-base';
+import { Button, Divider, Drawer, Icon, IconButton } from 'native-base';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux';
 import ButtonCompo from '../../components/button';
 import uuid from 'react-native-uuid';
-import { Firebase } from '../../../config';
+import { db } from '../../../config';
 import { useNavigation, StackActions } from '@react-navigation/native';
 import { clearCart } from '../../redux/CartSlice';
-
+import RNDateTimePicker,{DateTimePickerAndroid} from '@react-native-community/datetimepicker';
+import { buildInvoice } from '../../services/buildInvoice';
+import { Feather } from '@expo/vector-icons';
 
 const SlotBook = () => {
-    const [date, setDate] = useState<string[]>(["9 AM", "12 PM", "3 PM"]);
+    
     const [isTimeGreaterTan3PM, setIsTimeGreaterTan3PM] = useState<boolean | "NA">(false)
-    const [day, setDay] = useState({ tommorow: { day: "", date: 0 }, dayAfterTommorow: { day: "", date: 0 }, seletedDay: '' })
-    const [selectTime, setSelectTime] = useState("9 AM")
     const { total_price, items, total_items } = useSelector((state: RootState) => state.Cart)
     const { addresses, location, placeName } = useSelector((state: RootState) => state.Location)
     const { userDetails, User } = useSelector((state: RootState) => state.User)
     const navigate = useNavigation()
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
-
-
+    const [selectedAddress, setSelectedAddress] = useState(null)
+    const [show, setShow] = useState(false);
+    const [minDate, setMinDate] = useState<Date|null>(null)
+    const [date, setDate] = useState<Date|null>(null)
+    const [type,setType] = useState<"time"|"date">("date")
     useEffect(() => {
         (async () => {
             try {
                 // Get the server's timestamp
+                setIsTimeGreaterTan3PM("NA")
                 const serverTimeSnapshot = Timestamp;
                 const serverTime = serverTimeSnapshot.now().toDate();
-                // Set the time to 3 PM
-                const targetTime = new Date();
-                targetTime.setHours(15, 0, 0); // Set to 3 PM
-                // Compare the server's timestamp to the target time
-                const isGreater = serverTime > targetTime;
-                setIsTimeGreaterTan3PM(isGreater);
-                const tomorrow = new Date(serverTime);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowDate = tomorrow.getDate();
-                const tomorrowDayName = getDayName(tomorrow.getDay());
-
-                // Get the day after tomorrow's date
-                const dayAfterTomorrow = new Date(serverTime);
-                dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-                const dayAfterTomorrowDate = dayAfterTomorrow.getDate();
-                const dayAfterTomorrowDayName = getDayName(dayAfterTomorrow.getDay());
-                function getDayName(day: number) {
-                    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    return days[day];
+                console.log("x",serverTime)
+                if(serverTime.getHours() < 15){
+                    serverTime.setDate(serverTime.getDate()+1)
                 }
-                setDay({ tommorow: { date: tomorrowDate, day: tomorrowDayName }, dayAfterTommorow: { date: dayAfterTomorrowDate, day: dayAfterTomorrowDayName }, seletedDay: isGreater ? 'dayaftertommorow' : 'tommorow' })
+                else{
+                    serverTime.setDate(serverTime.getDate()+2)
+                }
+                serverTime.setHours(0, 0, 0, 0)
+                console.log("x",serverTime.toLocaleTimeString())
+                setMinDate(serverTime)
+                setDate(serverTime)
+                setIsTimeGreaterTan3PM(serverTime.getHours() >= 15)
+                // Set the time to 3 PM
             } catch (error) {
                 console.error("Error checking time:", error);
             }
         })()
+      
+        setSelectedAddress(addresses.find(item => item.addressName === placeName))
     }, [])
+
+    useEffect(()=>{
+        console.log("show",show)
+    },[show])
+
+    useEffect(()=>{
+        setShow(false)
+    },[date])
+
+
+    
+
 
 
     if ((typeof isTimeGreaterTan3PM) === "string") {
@@ -66,33 +76,60 @@ const SlotBook = () => {
     return (
         <View className='min-h-screen bg-white'>
             <Text className='text-center text-lg font-medium my-3'>When do you want us to deliver your order.</Text>
-            <View className='flex-row'>
-                <View className='grow'>
-                    <View className='flex-row justify-center gap-5'>
-                        {!isTimeGreaterTan3PM && <Button variant="outline"
-                            onPress={() => setDay(prev => ({ ...prev, seletedDay: "tommorow" }))}
-                            className={day.seletedDay === "tommorow" ? 'bg-black' : ""}
-                        >
-                            <Text className={day.seletedDay === "tommorow" ? 'font-medium text-center px-5 text-white' : 'font-medium text-center px-5 text-black'}>{`${day.tommorow.date} - ${day.tommorow.day}`}</Text>
-                        </Button>}
-                        <Button variant="outline"
-                            onPress={() => setDay(prev => ({ ...prev, seletedDay: "dayaftertommorow" }))}
-                            className={day.seletedDay === "dayaftertommorow" ? 'bg-black' : ""}
-                        >
-                            <Text className={day.seletedDay === "dayaftertommorow" ? 'font-medium text-center text-white' : 'font-medium text-center text-black'}>{`${day.dayAfterTommorow.date} - ${day.dayAfterTommorow.day}`}</Text>
-                        </Button>
-                    </View>
-                    <View className='h-40 w-1/2 m-auto my-5'>
+            <View className='border-dotted border-gray-300 border-[2px] mx-5 p-3 space-y-3 rounded-xl'>
+                <Text className='font-semibold text-lg text-center'>Shipping Details</Text>
+                <View className='space-y-3 mx-5'>
+                    <View className='flex-row  space-x-4'>
+                        <Text className='font-medium'>Selected Address</Text>
                         <View>
-                            <ScrollView>
-                                {date.map(time => (
-                                    <Pressable onPress={() => setSelectTime(time)}>
-                                        <View className={selectTime === time ? 'my-1 bg-slate-300 p-3 rounded-lg border-solid border-[2px] border-black' : 'my-1 bg-slate-300 p-3 rounded-lg'}>
-                                            <Text className='text-center font-semibold'>{time}</Text>
-                                        </View>
-                                    </Pressable>
-                                ))}
-                            </ScrollView>
+                            <Text>{selectedAddress?.houseFlatNo}, {selectedAddress?.buildingName}</Text>
+                            <Text className='flex grow w-[130px]'>{selectedAddress?.placeName}</Text>
+                        </View>
+                    </View>
+                    <View className='flex-row justify-between'>
+                        <Text className='font-medium'>Delivery Date</Text>
+                        <View className='flex flex-row items-center'>
+                            <Text>{date?date.toDateString():"Not selected"} </Text>
+                            <IconButton padding={0} icon={<Icon as={Feather} size={4} name='edit' />} onPress={()=> {
+                            setType("date")
+                            
+                            DateTimePickerAndroid.open({
+                                mode: "date",
+                                value:date?date:new Date(),
+                                minimumDate:minDate?minDate:new Date(),
+                                onChange(event, date) {
+                                    if(event.type === "set" && date){
+                                        date.setMinutes(0)
+                                        setDate(date)
+                                    
+                                }
+                                },
+                            })
+                            
+                        }}/></View>
+                    </View>
+                    <View className='flex-row justify-between'>
+                        <Text className='font-medium'>Delivery Slot</Text>
+                        <View className='flex flex-row items-center'>
+                            <Text>{date && date.toLocaleTimeString()} </Text>
+                            <IconButton padding={0} icon={<Icon as={Feather} size={4} name='edit' />} onPress={()=> {
+                             DateTimePickerAndroid.open({
+                                mode: "time",
+                                display:"spinner",
+                                minuteInterval:30,
+                                is24Hour:false,
+                                value:date?date:new Date(),
+                                minimumDate:minDate?minDate:new Date(),
+                                onChange(event, date) {
+                                    if(event.type === "set" && date){
+                                        date.setMinutes(0)
+                                        setDate(date)
+                                    
+                                }
+                                },
+                            })
+                            
+                        }}/>
                         </View>
                     </View>
                 </View>
@@ -123,52 +160,49 @@ const SlotBook = () => {
                 <View className='grow'>
                 </View>
                 <Divider />
-                <View className='mb-20 flex-row justify-between px-5 items-center pt-3'>
-                    <Text className='text-lg font-bold'>Total : ₹ {total_price + total_price * 0.05}</Text>
+                <View className='mb-20 px-5 pt-3'>
                     <View className='self-stretch'>
                         <Button
-                            className='bg-black w-24'
+                            className='bg-black w-full'
                             onPress={async () => {
+                                
                                 if (!User) return
+                                
                                 if (items.length === 0) return
                                 setLoading(true)
-                                const selectedAddress = addresses.find(item => item.addressName === placeName)
                                 if (!selectedAddress) return
                                 const OrderId = uuid.v4()
+                                console.log("a")
                                 const Order = {
                                     id: OrderId,
-                                    invoice: {},
                                     items: items,
                                     total_items: total_items,
                                     total_price: total_price,
                                     payment_details: {},
                                     payment_method: 'online',
-                                    shipping_address: {
+                                    shipping_details: {
+                                        delivery_slot: Timestamp.fromDate(date?date:new Date()),
                                         name: userDetails.name,
-                                        phone: userDetails.phoneNumber,
                                         email: userDetails.email,
-                                        address_line_1: selectedAddress.houseFlatNo,
-                                        address_line_2: selectedAddress.buildingName,
-                                        lat: location?.latitude,
-                                        log: location?.latitude,
-                                        formatted_address: placeName
+                                        address: selectedAddress
+                                        
                                     },
-                                    status: "created",
-                                    date_created: serverTimestamp(),
+                                    status: "payment completed",
+                                    date_created: Timestamp.now(),
                                     UserId: User.uid
                                 }
-                                // @ts-ignore
-                                Firebase.firestore().collection("Orders").doc(OrderId).set(Order)
+                                console.log(Order)
+                                const invoice = await buildInvoice(Order)
+                                console.log(invoice)
+                                
+                                setDoc(doc(db, "Orders", OrderId), {...Order,invoice})
                                     .then(() => {
                                         setTimeout(() => {
                                             //@ts-ignore
                                             navigate.navigate('OrderId', { orderId: OrderId })
-                                            dispatch(clearCart({
-                                                items: [],
-                                                total_items: 0,
-                                                total_price: 0
-                                            }))
+                                            dispatch(clearCart())
                                             setLoading(false)
+                                            
                                         }, 2000)
                                     })
                                     .catch((error) => console.log(error))

@@ -4,7 +4,7 @@ import { Button } from "native-base";
 
 const ButtonCompo = ({ handelClick, text, disable, loading }: { loading?: boolean, handelClick: () => void, text: string, disable?: boolean }) => {
     return (
-        <View>
+        <View className="mt-3">
             <Button
                 isLoading={loading}
                 isDisabled={disable}

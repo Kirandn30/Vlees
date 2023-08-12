@@ -34,35 +34,50 @@ import { TransitionSpecs } from '@react-navigation/stack';
 import ProductPage from './components/ProductPage'
 import * as IntentLauncher from 'expo-intent-launcher';
 import { getCurrentPositionAsync, Accuracy, requestForegroundPermissionsAsync } from 'expo-location';
-import { Firebase } from '../config';
+import { db,auth,func } from '../config';
 import { setLocation, setPlaceName } from './redux/Mapslice';
 import { FetchLocation } from './components/FetchLocation'
 import ShowCartDetails from './components/ShowCartDetails'
 import GetHelpOrder from './components/GetHelpOrder'
 import Geolocation from '@react-native-community/geolocation';
+import { geoDistance, findClosest } from './services/distance'
+import { setStoreLocation } from './redux/ProductsSlice'
+import { onAuthStateChanged, signOut } from 'firebase/auth/react-native'
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
 
 
 const Pages = () => {
     const Stack = createStackNavigator();
     const { User, userDetails } = useSelector((state: RootState) => state.User)
     const { CategoryName } = useSelector((state: RootState) => state.Listings)
-    const { fetchinglocation, placeName } = useSelector((state: RootState) => state.Location)
+    const { fetchinglocation, placeName, location, addresses } = useSelector((state: RootState) => state.Location)
     const { getHelpOrderData } = useSelector((state: RootState) => state.Orders)
 
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(true);
+
     useEffect(() => {
-        const unsub = Firebase.auth().onAuthStateChanged((user) => {
+        console.log("addresses",addresses.length)
+    },[addresses])
+
+    useEffect(() => {
+        
+        const unsub = onAuthStateChanged(auth,(user) => {
+            
             if (user) {
                 dispatch(setUser(user))
                 dispatch(setPlaceName("fetch"))
-                Firebase.firestore().collection("Address").where("userId", "==", user.uid).get()
+                getDocs(query(collection(db,"Address"), where("userId", "==", user.uid)))
                     .then((res) => {
                         dispatch(setAddresses(res.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
-                    })
+                    }).catch((err) =>console.log("err",err))
+                
+                    
             } else {
                 dispatch(setUser(null))
             }
+
         })
         return () => unsub();
     }, [])
@@ -73,25 +88,31 @@ const Pages = () => {
         } else {
             dispatch(setFetchingLocation(false))
         }
+        
     }, [placeName])
 
     useEffect(() => {
         if (!User) return
-        Firebase.firestore().collection("Users").doc(User.uid).get().then((response) => {
-            if (response.exists) {
+        //console.log(User.id)
+        getDoc(doc(db,"Users",User.uid)).then((response) => {
+            console.log("b")
+            if (response.exists()) {
+                console.log("doc exists")
                 dispatch(setUserDetails(response.data()))
                 setLoading(false);
             } else {
+                console.log("doc not exists",fetchinglocation)
                 dispatch(setUserDetails(null))
                 setLoading(false);
             }
         }).catch((error) => {
-            console.log(error);
+            console.log("err1",error);
         })
     }, [User])
 
 
     if (loading && !userDetails && User) {
+        console.log("loading")
         return (<View className='flex-1 justify-center items-center bg-white'>
             <Text className='text-xl font-semibold'>Loading......</Text>
         </View>);
@@ -116,7 +137,7 @@ const Pages = () => {
                 })
                     .then((currentLocation) => {
                         const { latitude, longitude } = currentLocation.coords;
-                        const addMessage = Firebase.functions().httpsCallable('addMessage');
+                        const addMessage = httpsCallable(func,'addMessage');
                         const coordinates = {
                             latitude,
                             longitude
@@ -124,19 +145,48 @@ const Pages = () => {
                         console.log("3");
                         addMessage(coordinates)
                             .then((res) => {
-                                if (res.data.name) {
-                                    dispatch(setPlaceName(res.data.name))
-                                    dispatch(setLocation({
-                                        latitude: latitude,
-                                        longitude: longitude
-                                    }))
+                                if (res.data.name ) {
+                                    
+                                    const closestAddress  = findClosest(coordinates, addresses)
+                                    
+                                    console.log("closest Address",closestAddress,addresses); 
+
+                                    
+                                    if(closestAddress){
+                                        const closestDistance = geoDistance(coordinates, closestAddress.location);
+                                        console.log("closest distance",closestDistance,coordinates);
+                                        if(closestDistance <= 100){
+                                            console.log("closest address",closestAddress)
+                                            dispatch(setPlaceName(closestAddress.addressName))
+                                            dispatch(setLocation(closestAddress.location))
+                                            
+                                        }
+                                        else{
+                                            dispatch(setPlaceName("not granted"))
+                                            dispatch(
+                                                setLocation({
+                                                    latitude: latitude,
+                                                    longitude: longitude
+                                                })
+                                            )
+                                        }
+                                    }
+                                    else{
+                                        dispatch(setPlaceName("not granted"))
+                                        dispatch(
+                                                setLocation({
+                                                latitude: latitude,
+                                                longitude: longitude
+                                            })
+                                        )
+                                    }
                                     console.log('4');
                                 } else {
                                     Alert.alert("Error fetching location try again")
                                 }
                             })
                             .catch((error) => {
-                                console.log(error);
+                                console.log("error1",error);
 
                             })
                     })
@@ -150,12 +200,20 @@ const Pages = () => {
             })
     }
 
+    
+    
 
     if (fetchinglocation) {
+        if (!addresses.length) {
+            return (<View className='flex-1 justify-center items-center bg-white'>
+                <Text className='text-xl font-semibold'>Loading......</Text>
+            </View>);
+        }
         return (
-            <FetchLocation getLocFunc={getLocFunc} />
+            <View>{<FetchLocation getLocFunc={getLocFunc} />}</View>
         )
-    } else {
+    }
+    else {
     if (User && userDetails) {
         return (
             <NavigationContainer ref={navigationRef}>
@@ -315,7 +373,7 @@ const Pages = () => {
                         //@ts-ignore
                         component={Profile}
                         options={{
-                            headerRight: () => (<Button variant="unstyled" onPress={() => Firebase.auth().signOut()}>
+                            headerRight: () => (<Button variant="unstyled" onPress={() => signOut(auth)}>
                                 <Text className='text-red-600'>Logout</Text>
                             </Button>),
                             headerLeft: () => (<GoBack />),

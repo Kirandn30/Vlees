@@ -20,16 +20,21 @@ type Props = {
 
 const ProductPage: React.FC<Props> = ({ route }) => {
     const [product, setProduct] = useState<null | IProductType>(null)
-    const { Products } = useSelector((state: RootState) => state.Listings)
+    const [variants, setVariants] = useState<IVariantType[]>([])
+    const { Products, Variants } = useSelector((state: RootState) => state.Listings)
     const navigate = useNavigation()
     const dispatch = useDispatch()
     const deviceWidth = Dimensions.get("window").width;
 
     useEffect(() => {
+        console.log(route.params)
         //@ts-ignore
         const data = Products.find(pro => pro.id === route.params.productId)
         if (data) {
             setProduct(data)
+            const varData = Variants.filter(vari => vari.ProductId === data.id)
+            if (varData) setVariants(varData)
+            console.log(data)
             dispatch(setCategoryName(data.name))
         } else {
             //@ts-ignore
@@ -96,7 +101,7 @@ const ProductPage: React.FC<Props> = ({ route }) => {
                 </View>
                 <View className='mt-5'>
                     <VarientsCard
-                        variantes={product.variantes}
+                        variantes={variants}
                     />
                 </View>
             </View>

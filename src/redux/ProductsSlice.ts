@@ -1,18 +1,27 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { User } from '@firebase/auth-types';
+import { GeoPoint } from 'firebase/firestore';
 
 interface ListingTypesType {
     Category: ICategory[],
     Products: IProductType[],
     Variants: IVariantType[],
-    CategoryName: string
+    CategoryName: string,
+    storeLocation: IStoreLocationType[],
+    selectedStore: IStoreLocationType|null,
+    filter: string|null,
+    loading: boolean
 }
 
 const initialState: ListingTypesType = {
     Category: [],
     Products: [],
     Variants: [],
-    CategoryName: ''
+    CategoryName: '',
+    storeLocation: [],
+    selectedStore:null,
+    filter: null,
+    loading: false
 }
 
 const ListingSlice = createSlice({
@@ -31,10 +40,24 @@ const ListingSlice = createSlice({
         setCategoryName: (state, action) => {
             state.CategoryName = action.payload
         },
+        setStoreLocation: (state, action) => {
+            state.storeLocation = action.payload
+        },
+        setSelectedStore: (state, action) => {
+            state.selectedStore = action.payload
+        },
+        setFilter: (state, action) => {
+            state.filter = action.payload
+        },
+        setLoading: (state, action) => {
+            state.loading = action.payload
+        }
+
+
     }
 })
 
-export const { setCategory, setProducts, setVariants, setCategoryName } = ListingSlice.actions
+export const { setCategory, setProducts, setVariants, setCategoryName, setStoreLocation, setSelectedStore,setFilter, setLoading } = ListingSlice.actions
 
 export default ListingSlice.reducer
 
@@ -93,4 +116,14 @@ export interface IProductBase {
     ratings: number,
     totalRatingsNo: number,
     caption: string
+}
+
+export interface IStoreLocationType {
+    id: string,
+    locationName: string,
+    coordinates: GeoPoint,
+    address: string,
+    contact: string,
+    inchargeName: string,
+    active: boolean
 }

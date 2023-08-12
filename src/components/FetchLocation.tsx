@@ -11,7 +11,7 @@ import { Platform } from "react-native"
 export const FetchLocation = ({ getLocFunc }: {
     getLocFunc: () => void
 }) => {
-    const { placeName } = useSelector((state: RootState) => state.Location)
+    const { placeName,addresses } = useSelector((state: RootState) => state.Location)
 
     useEffect(() => {
         if (Platform.OS === "android") {
@@ -20,7 +20,7 @@ export const FetchLocation = ({ getLocFunc }: {
             }, 100);
         }
         getLocFunc()
-    }, [])
+    }, [addresses])
 
     return (
         placeName !== "not granted" ? <View className="h-screen flex-row justify-center items-center">

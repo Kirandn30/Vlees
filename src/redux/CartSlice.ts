@@ -47,10 +47,10 @@ const CartSlice = createSlice({
                 state.total_price -= selectedVariant.discountedPrice * quantity;
             }
         }, 
-        clearCart: (state, action) => {
-            state.items = action.payload.items
-            state.total_items = action.payload.total_items
-            state.total_price = action.payload.total_price
+        clearCart: (state) => {
+            state.items = []
+            state.total_items = 0
+            state.total_price = 0
         }
     },
 })

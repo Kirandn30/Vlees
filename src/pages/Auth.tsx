@@ -1,13 +1,14 @@
 import { Text, View, TouchableWithoutFeedback, Keyboard, ScrollView, Platform } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha"
-import { Firebase, firebaseConfig } from '../../config'
+import { auth, firebaseConfig } from '../../config'
 import { Input, Image, Icon, Checkbox, FormControl, KeyboardAvoidingView } from "native-base";
 import { Feather, EvilIcons, AntDesign } from "@expo/vector-icons";
 import ButtonCompo from '../components/button';
 import KeyboardAvoider from '../components/keyboardAvoid';
 import { useDispatch } from 'react-redux';
 import { setPlaceName } from '../redux/Mapslice';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth/react-native';
 
 const PhoneAuth = () => {
     const [phoneNumber, setPhoneNumber] = useState<null | string>(null)
@@ -21,11 +22,14 @@ const PhoneAuth = () => {
     const dispatch = useDispatch()
 
     const sendVerificationCode = async () => {
+        
         try {
+
             if (!phoneNumber || !recaptchaVerifier.current) return
+            console.log("x")
             if (isValidIndianPhoneNumber(phoneNumber)) {
                 setLoading(true)
-                const phoneProvider = new Firebase.auth.PhoneAuthProvider()
+                const phoneProvider = new PhoneAuthProvider(auth)
                 const id = await phoneProvider.verifyPhoneNumber(`+91${phoneNumber}`, recaptchaVerifier.current)
                 setVerificationId(id)
                 setPhoneNumber(null)
@@ -46,14 +50,16 @@ const PhoneAuth = () => {
             if (!verificationId || !code) return
             if (code.length === 6) {
                 setLoading(true)
-                const credential = Firebase.auth.PhoneAuthProvider.credential(verificationId, code)
-                await Firebase.auth().signInWithCredential(credential)
+                const credential = PhoneAuthProvider.credential(verificationId, code)
+                await signInWithCredential(auth,credential)
                 setCode(null)
+                console.log("okay")
                 setLoading(false)
             } else {
                 setValidOTP(true)
             }
         } catch (error: any) {
+            console.log(error,"x")
             setLoading(false)
             setValidOTP(true)
         }
@@ -180,7 +186,7 @@ const PhoneAuth = () => {
 
 export default PhoneAuth
 
-function isValidIndianPhoneNumber(phoneNumber: string) {
+export function isValidIndianPhoneNumber(phoneNumber: string) {
     const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phoneNumber);
 }

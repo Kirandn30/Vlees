@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, SafeAreaView } from "react-native"
+import { Platform, SafeAreaView, } from "react-native"
 import {
     VStack,
     HStack,
@@ -10,7 +10,8 @@ import {
     ScrollView,
     View,
     Text,
-    KeyboardAvoidingView
+    KeyboardAvoidingView,
+    
 } from 'native-base';
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -18,6 +19,7 @@ import RoundImageButton from './AvatarCompo';
 import ButtonCompo from '../../components/button';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux';
+import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 
 const validationSchema = yup.object().shape({
     name: yup.string().required('Name is required'),
@@ -41,12 +43,10 @@ const ProfileForm = ({
     onSave, setImage, image, loading }: any) => {
 
     const { userDetails } = useSelector((state: RootState) => state.User)
-
+       // console.log("x",setImage,image)
     return (
-        <ScrollView pagingEnabled className={userDetails ? 'pb-9' : 'pb-9'}>
-            <KeyboardAvoidingView
-            // behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
+        <ScrollView >
+            
                 <Formik
                     initialValues={{
                         name: userDetails ? userDetails.name : '',
@@ -58,13 +58,14 @@ const ProfileForm = ({
                         city: userDetails ? userDetails.city : '',
                         state: userDetails ? userDetails.state : '',
                         gstNumber: userDetails ? userDetails.gstNumber : '',
+                        photoUrl: userDetails ? userDetails.photoUrl : '',
                     }}
                     validationSchema={validationSchema}
                     onSubmit={onSave}
                 >
                     {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setValues }) => {
                         return (
-                            <VStack space={4} mt={4}>
+                            <VStack space={4} mt={4} className="mb-20">
                                 {!userDetails && <HStack h="1/6" bg="gray.200" className='flex justify-center items-center'>
                                     <View>
                                         <RoundImageButton setImage={setImage} image={image} />
@@ -133,21 +134,14 @@ const ProfileForm = ({
                                     </FormControl>
                                     <FormControl isInvalid={Boolean(errors.state && touched.state)}>
                                         <FormControl.Label>State</FormControl.Label>
-                                        <Select
-                                            placeholder="Select a state"
-                                            selectedValue={values.state}
-                                            onValueChange={handleChange('state')}
-                                            _selectedItem={{
-                                                bg: 'gray.200',
-                                                endIcon: <Text>✔</Text>,
-                                                borderRadius: "xl",
-                                                color: "blue.100"
-                                            }}
-                                        >
-                                            {states.map((state, index) => (
-                                                <Select.Item key={index} label={state.label} value={state.value} />
-                                            ))}
-                                        </Select>
+                                        <AutocompleteDropdown
+                                           closeOnBlur={true}
+                                           closeOnSubmit={true}
+                                           initialValue={values.state}
+                                           onSelectItem={(item) => item?.id && setValues({...values, state: item.id})}
+                                           dataSet={states}
+                                           inputContainerStyle={{borderWidth: 1,borderColor:'#dddddd',backgroundColor:'transparent'}} 
+                                        />
                                         <FormControl.ErrorMessage>{errors.state}</FormControl.ErrorMessage>
                                     </FormControl>
                                     <FormControl isInvalid={Boolean(errors.gstNumber && touched.gstNumber)}>
@@ -173,7 +167,7 @@ const ProfileForm = ({
                         )
                     }}
                 </Formik>
-            </KeyboardAvoidingView>
+                
         </ScrollView>
     );
 };
@@ -181,32 +175,32 @@ const ProfileForm = ({
 export default ProfileForm;
 
 const states = [
-    { label: 'Andhra Pradesh', value: 'Andhra Pradesh' },
-    { label: 'Arunachal Pradesh', value: 'Arunachal Pradesh' },
-    { label: 'Assam', value: 'Assam' },
-    { label: 'Bihar', value: 'Bihar' },
-    { label: 'Chhattisgarh', value: 'Chhattisgarh' },
-    { label: 'Goa', value: 'Goa' },
-    { label: 'Gujarat', value: 'Gujarat' },
-    { label: 'Haryana', value: 'Haryana' },
-    { label: 'Himachal Pradesh', value: 'Himachal Pradesh' },
-    { label: 'Jharkhand', value: 'Jharkhand' },
-    { label: 'Karnataka', value: 'Karnataka' },
-    { label: 'Kerala', value: 'Kerala' },
-    { label: 'Madhya Pradesh', value: 'Madhya Pradesh' },
-    { label: 'Maharashtra', value: 'Maharashtra' },
-    { label: 'Manipur', value: 'Manipur' },
-    { label: 'Meghalaya', value: 'Meghalaya' },
-    { label: 'Mizoram', value: 'Mizoram' },
-    { label: 'Nagaland', value: 'Nagaland' },
-    { label: 'Odisha', value: 'Odisha' },
-    { label: 'Punjab', value: 'Punjab' },
-    { label: 'Rajasthan', value: 'Rajasthan' },
-    { label: 'Sikkim', value: 'Sikkim' },
-    { label: 'Tamil Nadu', value: 'Tamil Nadu' },
-    { label: 'Telangana', value: 'Telangana' },
-    { label: 'Tripura', value: 'Tripura' },
-    { label: 'Uttar Pradesh', value: 'Uttar Pradesh' },
-    { label: 'Uttarakhand', value: 'Uttarakhand' },
-    { label: 'West Bengal', value: 'West Bengal' }
+    { title: 'Andhra Pradesh', id: 'Andhra Pradesh' },
+    { title: 'Arunachal Pradesh', id: 'Arunachal Pradesh' },
+    { title: 'Assam', id: 'Assam' },
+    { title: 'Bihar', id: 'Bihar' },
+    { title: 'Chhattisgarh', id: 'Chhattisgarh' },
+    { title: 'Goa', id: 'Goa' },
+    { title: 'Gujarat', id: 'Gujarat' },
+    { title: 'Haryana', id: 'Haryana' },
+    { title: 'Himachal Pradesh', id: 'Himachal Pradesh' },
+    { title: 'Jharkhand', id: 'Jharkhand' },
+    { title: 'Karnataka', id: 'Karnataka' },
+    { title: 'Kerala', id: 'Kerala' },
+    { title: 'Madhya Pradesh', id: 'Madhya Pradesh' },
+    { title: 'Maharashtra', id: 'Maharashtra' },
+    { title: 'Manipur', id: 'Manipur' },
+    { title: 'Meghalaya', id: 'Meghalaya' },
+    { title: 'Mizoram', id: 'Mizoram' },
+    { title: 'Nagaland', id: 'Nagaland' },
+    { title: 'Odisha', id: 'Odisha' },
+    { title: 'Punjab', id: 'Punjab' },
+    { title: 'Rajasthan', id: 'Rajasthan' },
+    { title: 'Sikkim', id: 'Sikkim' },
+    { title: 'Tamil Nadu', id: 'Tamil Nadu' },
+    { title: 'Telangana', id: 'Telangana' },
+    { title: 'Tripura', id: 'Tripura' },
+    { title: 'Uttar Pradesh', id: 'Uttar Pradesh' },
+    { title: 'Uttarakhand', id: 'Uttarakhand' },
+    { title: 'West Bengal', id: 'West Bengal' }
 ];

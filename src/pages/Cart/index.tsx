@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux'
 import { MaterialIcons } from '@expo/vector-icons';
-import { Button, Divider, Drawer, Icon, Image } from 'native-base';
+import { Button, Divider, Drawer, Icon, Image, AlertDialog } from 'native-base';
 import { AntDesign } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
@@ -12,9 +12,10 @@ import { addItems, removeItems } from '../../redux/CartSlice';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonCompo from '../../components/button';
 import { collection, onSnapshot, query, serverTimestamp, where } from "firebase/firestore";
-import { Firebase } from '../../../config';
+import { db, func } from '../../../config';
 import { setAddresses, setLocation, setPlaceName } from '../../redux/Mapslice';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { httpsCallable } from 'firebase/functions';
 
 const Cart = () => {
     const { items, total_items, total_price } = useSelector((state: RootState) => state.Cart)
@@ -25,14 +26,14 @@ const Cart = () => {
     const [savings, setSavings] = useState(0)
     const deviceHeight = Dimensions.get("window").height;
     const dispatch = useDispatch()
-    const getOrderId = Firebase.functions().httpsCallable('getOrderId');
+    const getOrderId = httpsCallable(func,'getOrderId');
     const navigate = useNavigation()
 
 
     useEffect(() => {
         const totalPrice = items.reduce((accumulator, currentItem) => {
             const { quantity, selectedVariant } = currentItem;
-            const itemPrice = quantity * selectedVariant.originalPrice - selectedVariant.discountedPrice;
+            const itemPrice = quantity * (selectedVariant.originalPrice - selectedVariant.discountedPrice);
             return accumulator + itemPrice;
         }, 0);
         setSavings(totalPrice)
@@ -40,7 +41,7 @@ const Cart = () => {
 
     useEffect(() => {
         if (!User) return
-        const unsub = onSnapshot(query(collection(Firebase.firestore(), "Address"), where("userId", "==", User.uid)), (snap) => {
+        const unsub = onSnapshot(query(collection(db, "Address"), where("userId", "==", User.uid)), (snap) => {
             dispatch(setAddresses(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }))))
         })
         return () => unsub()
@@ -141,7 +142,7 @@ const Cart = () => {
                             color="black"
                         />
                         <Text className='text-lg font-semibold'>
-                            Review Items
+                            List of Items
                         </Text>
                     </View>
                     <FlatList
@@ -182,7 +183,7 @@ const Cart = () => {
                             text='PROCEED BOOKING'
                         />
                         <Drawer
-                            children={<SelectedAddress navigate={navigate} setIsOpen={setIsOpen} />}
+                            children={<ConfirmAddress navigate={navigate} setIsOpen={setIsOpen} />}
                             onClose={() => setIsOpen(false)}
                             placement="bottom"
                             isOpen={isOpen}
@@ -197,10 +198,53 @@ const Cart = () => {
 
 export default Cart
 
+export const ConfirmAddress = ({ navigate, setIsOpen }: { navigate: NavigationProp<ReactNavigation.RootParamList>, setIsOpen: React.Dispatch<React.SetStateAction<boolean>> }) => {
+    const { addresses, placeName, location } = useSelector((state: RootState) => state.Location)
+    const dispatch = useDispatch()
+    const [selectedAddress, setSelectedAddress] = useState(addresses.find(item => item.addressName === placeName))
 
-const SelectedAddress = ({ navigate, setIsOpen }: {
+    return (
+        <View className='bg-white p-5 space-y-2'>
+            <Text className='font-medium text-lg text-center'>Confirm Address</Text>
+            <View>
+                <Text className='text-lg font-semibold '>{selectedAddress?.addressName}</Text>
+                <Text className='font-semibold '>{selectedAddress?.houseFlatNo}</Text>
+                <Text>{selectedAddress?.placeName}</Text>
+            </View>
+            <View>
+                <Button
+                    variant={'outline'}
+                    onPress={() => {
+                        //@ts-ignore
+                        navigate.navigate('Your Location')
+                        setIsOpen(false)
+                    }}
+                >
+                    <Text>Select other Address</Text>
+                </Button>
+            </View>
+            <View className='mt-5'>
+                <ButtonCompo
+                    disable={false}
+                    handelClick={() => {
+                        if (!selectedAddress) return
+                        //@ts-ignore
+                        navigate.navigate("SlotBook")
+                        setIsOpen(false)
+                    }}
+                    loading={false}
+                    text='Select Slot'
+                />
+            </View>
+        </View>
+    )
+}
+
+
+export const SelectedAddress = ({ navigate, setIsOpen, showSlot=true }: {
     navigate: NavigationProp<ReactNavigation.RootParamList>
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+    showSlot?: boolean
 
 }) => {
 
@@ -210,21 +254,18 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
 
     return (
         <View className='bg-white p-5 space-y-2'>
-            <Text className='font-medium text-lg text-center'>Selected Address</Text>
+            <Text className='font-medium text-lg text-center'>Select Address</Text>
             <View>
                 {addresses.map(item => {
-                    const deliverable = location?.latitude && location?.longitude ?
-                        checkWithinRadius(17.3850, 78.4867, item.location.latitude, item.location.longitude) : false;
                     console.log(item.location.latitude, item.location.longitude);
                     return (
                         <Pressable onPress={() => {
-                            if (!deliverable) return
                             dispatch(setPlaceName(item.addressName))
                             dispatch(setLocation(item.location))
-                            setSelectedAddress(item.addressName)
+                            setSelectedAddress(item)
                         }}>
                             <View className={!(item.addressName === selectedAddress) ? 'p-3 py-1 border-solid border-[1px] border-gray-300 rounded-lg space-y-1 bg-white my-1' : 'p-3 py-1 border-solid border-[1px] border-gray-500 bg-red-50 rounded-lg space-y-1 my-1'}>
-                                {deliverable ? (<Text className='text-blue-500'>DELIVERS TO</Text>) : (<Text className='text-red-500'>DOES  NOT DELIVER TO</Text>)}
+                                
                                 <Text className='text-lg font-semibold '>{item.addressName}</Text>
                                 <Text>{item.placeName}</Text>
                             </View>
@@ -244,6 +285,7 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
                     <Text>Add New Address</Text>
                 </Button>
             </View>
+            {showSlot && 
             <View className='mt-5'>
                 <ButtonCompo
                     disable={false}
@@ -257,7 +299,7 @@ const SelectedAddress = ({ navigate, setIsOpen }: {
                     loading={false}
                     text='Select Slot'
                 />
-            </View>
+            </View>}
         </View>
     )
 }
@@ -293,25 +335,3 @@ interface IOrderType {
     date_created: any;
 }
 
-const checkWithinRadius = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const earthRadius = 6371; // Earth's radius in kilometers
-    const distanceThreshold = 1; // 5000 meters
-    const toRadians = (degrees: number) => {
-        return degrees * (Math.PI / 180);
-    };
-
-    const deltaLat = toRadians(lat2 - lat1);
-    const deltaLon = toRadians(lon2 - lon1);
-
-    const a =
-        Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-        Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(deltaLon / 2) *
-        Math.sin(deltaLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = earthRadius * c;
-
-    return distance <= distanceThreshold;
-};
